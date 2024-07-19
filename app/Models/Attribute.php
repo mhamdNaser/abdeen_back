@@ -10,4 +10,6 @@ class Attribute extends Model
     use HasFactory;
     protected $table = 'attributes';
     protected $guarded = [];
+
+
 }

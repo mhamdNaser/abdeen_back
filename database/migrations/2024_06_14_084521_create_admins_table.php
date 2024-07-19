@@ -23,6 +23,9 @@ return new class extends Migration
             $table->unsignedBigInteger('country_id')->nullable();
             $table->unsignedBigInteger('state_id')->nullable();
             $table->unsignedBigInteger('city_id')->nullable();
+            $table->string('address_1')->nullable();
+            $table->string('address_2')->nullable();
+            $table->string('address_3')->nullable();
             $table->string('image')->nullable();
             $table->unsignedBigInteger('role_id')->nullable();
             $table->boolean('status');

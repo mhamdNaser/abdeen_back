@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('attributes', function (Blueprint $table) {
             $table->bigIncrements('id')->unsigned()->unique();
-            $table->string('name');
+            $table->string('en_name');
+            $table->string('ar_name');
             $table->boolean('status');
             $table->timestamps();
         });

@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\product_details\ProductRequest;
+use App\Http\Requests\Admin\product_details\UpdateProductRequest;
+use App\Http\Requests\Admin\product_details\StoreProductImageRequest;
 use App\Http\Resources\Admin\product\ProductResource;
+use App\Http\Resources\Admin\product\ViewProductResource;
+use App\Http\Resources\Site\ProductResource as ProductResourceSite;
 use App\Models\Image;
 use App\Models\Product;
 use App\Models\ProductArchives;
@@ -36,12 +40,41 @@ class ProductController extends Controller
         return ProductResource::collection($products);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function allproducts()
     {
-        //
+        $cacheDuration = 60; // Cache duration in minutes
+        $cacheKey = 'all_products_cache';
+
+        $products = Cache::remember($cacheKey, $cacheDuration, function () {
+            return Product::get();
+        });
+
+        $productCountInDB = Product::count();
+
+        if ($products->count() !== $productCountInDB) {
+            $products = Product::get();
+            Cache::put($cacheKey, $products, $cacheDuration);
+        }
+
+        return ProductResourceSite::collection($products);
+    }
+
+    public function topSellingProducts()
+    {
+        // Fetch the top 6 products with the highest buy_num
+        $topSellingProducts = Product::orderBy('buy_num', 'desc')->take(4)->get();
+
+        // Return the products as a resource collection
+        return ProductResource::collection($topSellingProducts);
+    }
+
+    public function topDiscountedProducts()
+    {
+        // Fetch the top 6 products with the highest discount
+        $topDiscountedProducts = Product::orderBy('discount', 'desc')->take(4)->get();
+
+        // Return the products as a resource collection
+        return ProductResource::collection($topDiscountedProducts);
     }
 
     /**
@@ -58,9 +91,13 @@ class ProductController extends Controller
         // Create new product
         $product = Product::create([
             'sku' => $validated['sku'],
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'price' => $validated['price'],
+            'en_name' => $validated['en_name'],
+            'ar_name' => $validated['ar_name'],
+            'en_description' => $validated['en_description'],
+            'ar_description' => $validated['ar_description'],
+            'cost_Price' => $validated['cost_Price'],
+            'public_price' => $validated['public_price'],
+            'discount' => 0,
             'quantity' => $validated['quantity'],
             'category_id' => $validated['category_id'],
             'brand_id' => $validated['brand_id'],
@@ -68,12 +105,23 @@ class ProductController extends Controller
         ]);
 
 
-        if ($request->hasFile('image')) {
-            $imagePath = $this->uploadImage($request->file('image'));
+        if ($validated['image']) {
+            // Generate unique image name
+            $imageName = uniqid() . '_' . $validated['image']->getClientOriginalName();
+
+            // Specify the destination directory within the public disk
+            $destinationPath = public_path('upload/images/products/');
+
+            // Move the uploaded file to the destination directory
+            $validated['image']->move($destinationPath, $imageName);
+
+            // Return the image path
+            $imagePath = 'upload/images/products/' . $imageName;
 
             // Create image record
             $image = new Image();
-            $image->name = $imagePath; // Store the image path
+            $image->path = $imagePath;
+            $image->name = $imageName;
             $product->images()->save($image);
 
             $product->update([
@@ -94,9 +142,38 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Product $product)
+    public function show($id)
     {
-        //
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'product' => new ViewProductResource($product),
+        ], 200);
+    }
+
+    public function cartProduct($id)
+    {
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'product' => new ProductResourceSite($product),
+        ], 200);
     }
 
     /**
@@ -110,7 +187,7 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(ProductRequest $request, $id)
+    public function update(UpdateProductRequest $request, $id)
     {
         $validated = $request->validated();
 
@@ -122,19 +199,48 @@ class ProductController extends Controller
 
         // Prepare data for update
         $updateData = [
-            'sku' => $validated['sku'],
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'price' => $validated['price'],
-            'quantity' => $validated['quantity'],
-            'category_id' => $validated['category_id'],
-            'brand_id' => $validated['brand_id'],
+            'sku' => $validated['sku'] ?? $product->sku,
+            'en_name' => $validated['en_name'] ?? $product->en_name,
+            'ar_name' => $validated['ar_name'] ?? $product->ar_name,
+            'en_description' => $validated['en_description'] ?? $product->en_description,
+            'ar_description' => $validated['ar_description'] ?? $product->ar_description,
+            'cost_Price' => $validated['cost_Price'] ?? $product->cost_Price,
+            'public_price' => $validated['public_price'] ?? $product->public_price,
+            'discount' => $validated['discount'] ?? 0,
+            'quantity' => $validated['quantity'] ?? $product->quantity,
+            'category_id' => $validated['category_id'] ?? $product->category_id,
+            'brand_id' => $validated['brand_id'] ?? $product->brand_id,
             'status' => 1,
         ];
 
-        // Handle image upload if provided
-        if ($request->hasFile('image')) {
-            $imagePath = $this->uploadImage($request->file('image'));
+        if ($validated['image']) {
+            $imageName = $validated['en_name'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
+
+            // Specify the destination directory within the public disk
+            $destinationPath = public_path('upload/images/users/');
+
+            // Move the uploaded file to the destination directory
+            $validated['image']->move($destinationPath, $imageName);
+
+            // Construct the image path
+            $imagePath = 'upload/images/users/' . $imageName;
+
+            // Check if user already has an image
+            $existingImage = $product->images()->first();
+            if ($existingImage) {
+                // Update existing image record
+                $existingImage->name = $imageName;
+                $existingImage->path = $imagePath;
+                $existingImage->save();
+            } else {
+                // Create a new image record
+                $image = new Image();
+                $image->name = $imageName;
+                $image->path = $imagePath;
+                $product->images()->save($image);
+            }
+
+            // Update user's image path
             $updateData['image'] = $imagePath;
         }
 
@@ -150,7 +256,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'product updated successfully.',
-            'product' => $product, 
+            'product' => $product,
         ], 200);
     }
 
@@ -168,7 +274,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'category status updated successfully.',
+            'message' => 'Product status updated successfully.',
             "data" => $category
         ], 200);
     }
@@ -185,37 +291,47 @@ class ProductController extends Controller
         DB::beginTransaction();
 
         try {
-            // Fetch product with IDs matching $idsToDelete
-            $productsToDelete = Product::whereIn('id', $idsToDelete)->get();
+            $UsersToDelete = User::whereIn('id', $idsToDelete)->get();
 
-            // Move product to ProductArchives and delete from product
-            foreach ($productsToDelete as $product) {
-                ProductArchives::create([
-                    'sku' => $product->sku,
-                    'name' => $product->name,
-                    'image' => $product->image,
-                    'description' => $product->description,
-                    'price' => $product->price,
-                    'category_id' => $product->category_id,
-                    'brand_id' => $product->brand_id,
-                    'quantity' => 0,
-                    'status' => 0,
+            foreach ($UsersToDelete as $User) {
+                UserArchives::create([
+                    'username' => $User->username,
+                    'email' => $User->email,
+                    'phone' => $User->phone,
+                    'password' => $User->password,
+                    'first_name' => $User->first_name,
+                    'medium_name' => $User->medium_name,
+                    'last_name' => $User->last_name,
+                    'country_id' => $User->country_id,
+                    'state_id' => $User->state_id,
+                    'city_id' => $User->city_id,
+                    'image' => null,
                 ]);
 
-                $product->delete();
+                $images = $User->images;
+
+                foreach ($images as $image) {
+                    $imagePath = public_path($image->path);
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath);
+                    }
+                    $image->delete();
+                }
+
+                $User->delete();
             }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'product soft deleted successfully.',
+                'message' => 'Users soft deleted successfully.',
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to soft delete product.',
+                'message' => 'Failed to soft delete Users.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -242,6 +358,19 @@ class ProductController extends Controller
                 'status' => 0,
             ]);
 
+            $images = $product->images;
+
+            // Delete image records from database
+            foreach ($images as $image) {
+                // Delete image file from the server
+                $imagePath = public_path($image->path);
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
+                // Delete the image record from the database
+                $image->delete();
+            }
+
             $product->delete();
 
             Cache::forget("products_cache");
@@ -261,18 +390,40 @@ class ProductController extends Controller
         }
     }
 
-    private function uploadImage($imageFile)
+    public function storeImage(StoreProductImageRequest $request, $productId)
     {
-        // Generate unique image name
-        $imageName = uniqid() . '_' . $imageFile->getClientOriginalName();
+        $product = Product::findOrFail($productId);
 
-        // Specify the destination directory within the public disk
-        $destinationPath = public_path('upload/images/products/');
+        if ($request->hasFile('images')) {
+            $product->storeImages($request->file('images'));
+        }
 
-        // Move the uploaded file to the destination directory
-        $imageFile->move($destinationPath, $imageName);
+        return response()->json([
+            'success' => true,
+            'message' => 'Images uploaded successfully.',
+            'product' => $product // إعادة البيانات المنتج مع الاستجابة
+        ]);
+    }
 
-        // Return the image path
-        return 'upload/images/products/' . $imageName;
+    public function deleteImage($productId, $imageId)
+    {
+        $product = Product::findOrFail($productId);
+
+        if ($product->deleteImage($imageId)) {
+            return response()->json(['success' => true, 'message' => 'Image deleted successfully.']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Image not found.']);
+        }
+    }
+
+    public function showImages($productId)
+    {
+        $product = Product::findOrFail($productId);
+        $images = $product->getImages();
+
+        return response()->json([
+            'success' => true,
+            'images' => $images,
+        ], 200);
     }
 }

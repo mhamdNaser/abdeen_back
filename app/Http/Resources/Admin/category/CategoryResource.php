@@ -16,12 +16,16 @@ class CategoryResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'description' => $this->description,
-            'parent' => $this->parent ? $this->parent->name : null,
+            'en_name' => $this->en_name,
+            'ar_name' => $this->ar_name,
+            'en_description' => $this->en_description,
+            'ar_description' => $this->ar_description,
+            'en_parent' => $this->parent ? $this->parent->en_name : null,
+            'ar_parent' => $this->parent ? $this->parent->ar_name : null,
             'parent_id' => $this->parent_id,
             'status' => $this->status,
             'in_menu' => $this->in_menu,
+            'image' => $this->image ?  $this->image : null,
         ];
     }
 }

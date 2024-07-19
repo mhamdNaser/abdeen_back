@@ -11,6 +11,11 @@ class AttributeTags extends Model
     protected $table = 'attribute_tags';
     protected $guarded = [];
 
+    public function productTags()
+    {
+        return $this->hasMany(ProductTags::class, 'tag_id');
+    }
+
     public function attribute()
     {
         return $this->belongsTo(Attribute::class, 'attribute_id');

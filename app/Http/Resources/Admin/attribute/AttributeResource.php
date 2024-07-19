@@ -16,7 +16,8 @@ class AttributeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'en_name' => $this->en_name,
+            'ar_name' => $this->ar_name,
             'status' => $this->status,
         ];
     }

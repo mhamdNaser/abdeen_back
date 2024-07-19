@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\admins\AddressRequest;
 use App\Http\Requests\Admin\admins\AdminRequest;
 use App\Http\Requests\Admin\admins\StoreRequest;
 use App\Http\Requests\Admin\admins\UpdateRequest;
@@ -28,20 +29,20 @@ class AdminController extends Controller
         $cacheKey = 'admins_cache';
 
         $admins = Cache::remember($cacheKey, $cacheDuration, function () {
-            return Admin::whereNot('role_id', 1)
-            ->orWhereNull('role_id')
-            ->with('role')
+            return Admin::whereNot('role_id', 5251)
+                ->orWhereNull('role_id')
+                ->with('role')
                 ->get();
         });
 
-        $adminCountInDB = Admin::whereNot('role_id', 1)
-        ->orWhereNull('role_id')
-        ->count();
+        $adminCountInDB = Admin::whereNot('role_id', 5251)
+            ->orWhereNull('role_id')
+            ->count();
 
         if ($admins->count() !== $adminCountInDB) {
-            $admins = Admin::whereNot('role_id', 1)
-            ->orWhereNull('role_id')
-            ->with('role')
+            $admins = Admin::whereNot('role_id', 5251)
+                ->orWhereNull('role_id')
+                ->with('role')
                 ->get();
             Cache::put($cacheKey, $admins, $cacheDuration);
         }
@@ -128,12 +129,22 @@ class AdminController extends Controller
         ]);
 
 
-        if ($request->hasFile('image')) {
-            $imagePath = $this->uploadImage($request->file('image'));
+        if ($validated['image']) {
+            $imageName = $validated['username'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
+
+            // Specify the destination directory within the public disk
+            $destinationPath = public_path('upload/images/admins/');
+
+            // Move the uploaded file to the destination directory
+            $validated['image']->move($destinationPath, $imageName);
+
+            // Construct the image path
+            $imagePath = 'upload/images/admins/' . $imageName;
 
             // Create image record
             $image = new Image();
-            $image->name = $imagePath; // Store the image path
+            $image->name = $imageName;
+            $image->path = $imagePath;
             $admin->images()->save($image);
 
             $admin->update([
@@ -149,84 +160,6 @@ class AdminController extends Controller
             'success' => true,
             'message' => 'Admin created successfully',
         ], 201);
-    }
-
-
-    public function softDeleteArray(Request $request)
-    {
-        $validatedData = $request->validate([
-            'array' => 'required|array',
-        ]);
-
-        $idsToDelete = $validatedData['array'];
-
-        DB::beginTransaction();
-
-        try {
-            // Fetch admins with IDs matching $idsToDelete
-            $adminsToDelete = Admin::whereIn('id', $idsToDelete)->get();
-
-            // Move admins to AdminArchive and delete from Admin
-            foreach ($adminsToDelete as $admin) {
-                AdminArchive::create([
-                    'username' => $admin->username,
-                    'email' => $admin->email,
-                    'phone' => $admin->phone,
-                    'password' => $admin->password,
-                    'first_name' => $admin->first_name,
-                    'medium_name' => $admin->medium_name,
-                    'last_name' => $admin->last_name,
-                    'country_id' => $admin->country_id,
-                    'state_id' => $admin->state_id,
-                    'city_id' => $admin->city_id,
-                    'image' => $admin->image,
-                    'role_id' => $admin->role_id,
-                    'status' => 0,
-                ]);
-
-                $admin->delete();
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Admins soft deleted successfully.',
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to soft delete admins.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function changestatus($id)
-    {
-        $admin = Admin::findOrFail($id);
-
-        // Toggle the status between 1 and 0
-        $admin->update([
-            'status' => $admin->status == 1 ? 0 : 1,
-        ]);
-
-        // Clear the cache since a role status has been updated
-        Cache::forget('admins_cache');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'admin status updated successfully.',
-            "data"=> $admin
-        ], 200);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show($id)
-    {
     }
 
     /**
@@ -247,7 +180,7 @@ class AdminController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
-            'role_id' => $validated['role_id'],
+            'role_id' => $validated['role_id'] ?? $admin->role_id,
         ];
 
         // Update name fields if 'name' is present
@@ -259,8 +192,25 @@ class AdminController extends Controller
         }
 
         // Handle image upload if provided
-        if ($request->hasFile('image')) {
-            $imagePath = $this->uploadImage($request->file('image'));
+        if ($validated['image']) {
+            $imageName = $validated['username'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
+
+            // Specify the destination directory within the public disk
+            $destinationPath = public_path('upload/images/admins/');
+
+            // Move the uploaded file to the destination directory
+            $validated['image']->move($destinationPath, $imageName);
+
+            // Construct the image path
+            $imagePath = 'upload/images/admins/' . $imageName;
+
+        
+            $image = new Image();
+            $image->name = $imageName;
+            $image->path = $imagePath;
+            $admin->images()->save($image);
+
+            // Update admin's image path
             $updateData['image'] = $imagePath;
         }
 
@@ -276,10 +226,144 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Admin updated successfully.',
-            'admin' => $admin, // Optionally return the updated admin data
+            'admin' => new LoginResource($admin), // Optionally return the updated admin data
         ], 200);
     }
 
+
+
+    public function softDeleteArray(Request $request)
+    {
+        $validatedData = $request->validate([
+            'array' => 'required|array',
+        ]);
+
+        $idsToDelete = $validatedData['array'];
+
+        DB::beginTransaction();
+
+        try {
+            $adminsToDelete = Admin::whereIn('id', $idsToDelete)->get();
+
+            foreach ($adminsToDelete as $admin) {
+                AdminArchive::create([
+                    'username' => $admin->username,
+                    'email' => $admin->email,
+                    'phone' => $admin->phone,
+                    'password' => $admin->password,
+                    'first_name' => $admin->first_name,
+                    'medium_name' => $admin->medium_name,
+                    'last_name' => $admin->last_name,
+                    'country_id' => $admin->country_id,
+                    'state_id' => $admin->state_id,
+                    'city_id' => $admin->city_id,
+                    'image' => $admin->image,
+                    'role_id' => $admin->role_id,
+                    'status' => 0,
+                ]);
+
+                $images = $admin->images;
+
+                foreach ($images as $image) {
+                    $imagePath = public_path($image->path);
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath);
+                    }
+                    $image->delete();
+                }
+
+                $admin->delete();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Admins soft deleted successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to soft delete admins.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function changestatus($id)
+    {
+        $admin = Admin::findOrFail($id);
+
+        // Toggle the status between 1 and 0
+        $admin->update([
+            'status' => $admin->status == 1 ? 0 : 1,
+        ]);
+
+        // Clear the cache since a role status has been updated
+        Cache::forget('admins_cache');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'admin status updated successfully.',
+            "data" => $admin
+        ], 200);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $admin = Admin::find($id);
+
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'admin' => new LoginResource($admin),
+        ], 200);
+    }
+
+    public function updateAddress(AddressRequest $request, $id)
+    {
+        $validated = $request->validated();
+
+        // Begin a database transaction
+        DB::beginTransaction();
+
+        // Find the admin by ID
+        $admin = Admin::findOrFail($id);
+
+        // Prepare data for update
+        $updateData = [
+            'country_id' => $validated['country_id'] ?? $admin->country_id,
+            'state_id' => $validated['state_id'] ?? $admin->state_id,
+            'city_id' => $validated['city_id'] ?? $admin->city_id,
+            'address_1' => $validated['address_1'] ?? $admin->address_1,
+            'address_2' => $validated['address_2'] ?? $admin->address_2,
+            'address_3' => $validated['address_3'] ?? $admin->address_3,
+        ];
+
+        // Update admin with the prepared data
+        $admin->update($updateData);
+
+        // Commit the transaction
+        DB::commit();
+
+        // Return a success response with the updated admin data
+        return response()->json([
+            'success' => true,
+            'message' => 'Admin updated successfully.',
+            'admin' => new LoginResource($admin), // Optionally return the updated admin data
+        ], 200);
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -301,15 +385,25 @@ class AdminController extends Controller
                 'country_id' => $admin->country_id,
                 'state_id' => $admin->state_id,
                 'city_id' => $admin->city_id,
-                'image' => $admin->image,
+                'image' => null,
                 'role_id' => $admin->role_id,
                 'status' => 0,
             ]);
 
+            $images = $admin->images;
+
+            foreach ($images as $image) {
+                $imagePath = public_path($image->path);
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
+                $image->delete();
+            }
+
             $admin->delete();
 
             Cache::forget("admins_cache");
-            
+
             DB::commit();
 
             return response()->json([
@@ -320,24 +414,9 @@ class AdminController extends Controller
             DB::rollback();
             return response()->json([
                 'success' => false,
-                'message' => 'Admin soft delete failed' . $e->getMessage()
+                'message' => 'Admin soft delete failed. ' . $e->getMessage()
             ], 500);
         }
     }
 
-
-    private function uploadImage($imageFile)
-    {
-        // Generate unique image name
-        $imageName = uniqid() . '_' . $imageFile->getClientOriginalName();
-
-        // Specify the destination directory within the public disk
-        $destinationPath = public_path('upload/images/admin/');
-
-        // Move the uploaded file to the destination directory
-        $imageFile->move($destinationPath, $imageName);
-
-        // Return the image path
-        return 'upload/images/admin/' . $imageName;
-    }
 }

@@ -52,7 +52,8 @@ class AttributeController extends Controller
 
         // Create a new resource using the validated data
         $resource = new Attribute();
-        $resource->name = $validatedData['name'];
+        $resource->en_name = $validatedData['en_name'];
+        $resource->ar_name = $validatedData['ar_name'];
         $resource->status = 1;
 
         // Save the resource to the database
@@ -90,7 +91,8 @@ class AttributeController extends Controller
         $validatedData = $request->validated();
 
         $attribute->update([
-            'name' => $validatedData['name'],
+            'en_name' => $validatedData['en_name'],
+            'ar_name' => $validatedData['ar_name'],
             'status' => 1,
         ]);
 

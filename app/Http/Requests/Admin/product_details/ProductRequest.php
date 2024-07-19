@@ -25,9 +25,12 @@ class ProductRequest extends FormRequest
     {
         return [
             'sku'           => 'required|string|max:255',
-            'name'          => 'required|string|max:255',
-            'description'   => 'required|string|max:255',
-            'price'         => 'nullable|integer',
+            'en_name'          => 'required|string|max:255',
+            'ar_name'          => 'required|string|max:255',
+            'en_description'   => 'required|string',
+            'ar_description'   => 'required|string',
+            'cost_Price'     => 'nullable|integer',
+            'public_price'     => 'nullable|integer',
             'quantity'      => 'nullable|integer',
             'category_id'   => 'nullable|integer',
             'brand_id'      => 'nullable|integer',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\product_details\CategoryRequest;
 use App\Http\Resources\Admin\category\CategoryResource;
 use App\Models\Category;
+use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +44,7 @@ class CategoryController extends Controller
 
     public function menuCategory()
     {
-        $categories = Category::whereNot("id", 1)->where("in_menu", 1)->get();
+        $categories = Category::whereNot("id", 1)->where("in_menu", 1)->where("status", 1)->get();
 
         return CategoryResource::collection($categories);
     }
@@ -61,14 +62,36 @@ class CategoryController extends Controller
      */
     public function store(CategoryRequest $request)
     {
-        $validatedData = $request->validated();
+        $validated = $request->validated();
 
-        // Create a new resource using the validated data
-        $resource = new Category();
-        $resource->name = $validatedData['name'];
-        $resource->description = $validatedData['description'];
-        $resource->status = 1;
-        $resource->parent_id = $validatedData['parent_id'] ?? null; // Handle nullable parent_id
+        $resource = Category::create([
+            'en_name' => $validated['en_name'],
+            'ar_name' => $validated['ar_name'],
+            'en_description' => $validated['en_description'],
+            'ar_description' => $validated['ar_description'],
+            'status' => 1,
+            'in_menu' => 0,
+            'parent_id' => $validated['parent_id'] ?? null,
+        ]);
+
+
+        if ($request->hasFile('image')) {
+            $imageName = $validated['en_name'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
+
+            // Specify the destination directory within the public disk
+            $destinationPath = public_path('upload/images/categories/');
+
+            // Move the uploaded file to the destination directory
+            $validated['image']->move($destinationPath, $imageName);
+
+            // Construct the image path
+            $imagePath = 'upload/images/categories/' . $imageName;
+
+            $resource->update([
+                'image' => $imagePath
+            ]);
+        }
+
 
         // Save the resource to the database
         $resource->save();
@@ -81,37 +104,91 @@ class CategoryController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Category $category)
-    {
-        //
-    }
-
-    
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(CategoryRequest $request, $id)
     {
-        $category = Category::findOrFail($id);
+        $validated = $request->validated();
 
-        $validatedData = $request->validated();
+        DB::beginTransaction();
 
-        $category->update([
-            'name' => $validatedData['name'],
-            'description' => $validatedData['description'],
-            'parent_id' => $validatedData['parent_id'],
-            'status' => 1,
-        ]);
+        try {
+            $category = Category::findOrFail($id);
 
-        // Clear the cache since a role has been updated
-        Cache::forget('categories_cache');
+            // Prepare data for update
+            $updateData = [
+                'en_name' => $validated['en_name'],
+                'ar_name' => $validated['ar_name'],
+                'en_description' => $validated['en_description'],
+                'ar_description' => $validated['ar_description'],
+                'parent_id' => $validated['parent_id'],
+                'status' => 1,
+            ];
+
+            // Handle image upload if provided
+            if ($request->hasFile('image')) {
+                $imageName = $validated['en_name'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
+
+                // Specify the destination directory within the public disk
+                $destinationPath = public_path('upload/images/categories/');
+
+                // Move the uploaded file to the destination directory
+                $validated['image']->move($destinationPath, $imageName);
+
+                // Construct the image path
+                $imagePath = 'upload/images/categories/' . $imageName;
+
+                // If the category already has an image, delete the old image
+                if ($category->image) {
+                    $oldImagePath = public_path($category->image);
+                    if (file_exists($oldImagePath)) {
+                        unlink($oldImagePath);
+                    }
+                    $updateData['image'] = $imagePath;
+                }else{
+                    $updateData['image'] = $imagePath;
+                }
+
+            }
+
+            $category->update($updateData);
+            Cache::forget('categories_cache');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Category updated successfully.',
+                "data" => $validated
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update category.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin not found.'
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Category updated successfully.'
+            'category' => new CategoryResource($category),
         ], 200);
     }
 
@@ -122,6 +199,7 @@ class CategoryController extends Controller
         // Toggle the status between 1 and 0
         $category->update([
             'status' => $category->status == 1 ? 0 : 1,
+            'in_menu' => 0
         ]);
 
         // Clear the cache since a role status has been updated
@@ -166,11 +244,19 @@ class CategoryController extends Controller
         DB::beginTransaction();
 
         try {
-            // Fetch admins with IDs matching $idsToDelete
+            // Fetch categories with IDs matching $idsToDelete
             $categoriesToTable = Category::whereIn('id', $idsToDelete)->get();
 
-            // Move admins to AdminArchive and delete from Admin
+            // Delete categories and their images
             foreach ($categoriesToTable as $category) {
+                // Delete the image from the folder if it exists
+                if ($category->image) {
+                    $imagePath = public_path($category->image);
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath);
+                    }
+                }
+
                 $category->delete();
             }
 
@@ -178,31 +264,56 @@ class CategoryController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Admins soft deleted successfully.',
+                'message' => 'Categories deleted successfully.',
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to soft delete admins.',
+                'message' => 'Failed to delete categories.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
     {
-        $category = Category::findOrFail($id);
-        $category->delete();
+        DB::beginTransaction();
 
-        // Clear the cache since a role has been deleted
-        Cache::forget('categories_cache');
+        try {
+            $category = Category::findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Role deleted successfully.'
-        ], 200);
+            // Delete the image from the folder if it exists
+            if ($category->image) {
+                $imagePath = public_path($category->image);
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
+            }
+
+            $category->delete();
+
+            // Clear the cache since a category has been deleted
+            Cache::forget('categories_cache');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Category deleted successfully.'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete category.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
+
+
 }

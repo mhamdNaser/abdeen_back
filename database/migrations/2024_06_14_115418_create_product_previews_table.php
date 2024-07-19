@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->unsigned()->index();
             $table->foreignId('product_id')->unsigned()->index();
             $table->integer('rate');
-            $table->string('nate')->nullable();
+            $table->string('note')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

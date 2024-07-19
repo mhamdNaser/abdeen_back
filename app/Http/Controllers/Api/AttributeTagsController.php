@@ -42,8 +42,10 @@ class AttributeTagsController extends Controller
 
         // Create a new resource using the validated data
         $resource = new AttributeTags();
-        $resource->name = $validatedData['name'];
-        $resource->description = $validatedData['description'];
+        $resource->en_name = $validatedData['en_name'];
+        $resource->ar_name = $validatedData['ar_name'];
+        $resource->en_description = $validatedData['en_description'];
+        $resource->ar_description = $validatedData['ar_description'];
         $resource->attribute_id = $validatedData['attribute_id'] ?? null; // Handle nullable parent_id
         $resource->status = 1;
 
@@ -83,8 +85,10 @@ class AttributeTagsController extends Controller
         $validatedData = $request->validated();
 
         $tag->update([
-            'name' => $validatedData['name'],
-            'description' => $validatedData['description'],
+            'en_name' => $validatedData['en_name'],
+            'ar_name' => $validatedData['ar_name'],
+            'en_description' => $validatedData['en_description'],
+            'ar_description' => $validatedData['ar_description'],
             'status' => 1,
         ]);
 

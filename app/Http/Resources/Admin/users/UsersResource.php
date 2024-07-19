@@ -20,6 +20,9 @@ class UsersResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'image' => $this->image,
+            'country' => $this->country ? $this->country->name : null,
+            'state' => $this->state ? $this->state->name : null,
+            'city' => $this->city ? $this->city->name : null,
             'name' => $this->first_name . " " . $this->medium_name . " " . $this->last_name,
             'status' => $this->status
         ];

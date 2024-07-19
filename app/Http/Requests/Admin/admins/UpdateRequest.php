@@ -30,7 +30,7 @@ class UpdateRequest extends FormRequest
             'email'         => 'nullable|email|max:255|unique:admins,email,' . $id,
             'phone'         => 'nullable|integer|unique:admins,phone,' . $id,
             'name'          => 'nullable|string|max:255',
-            'role_id'       => 'nullable|integer',
+            'role_id'       => 'nullable',
             'image'         => 'nullable',
         ];
     }

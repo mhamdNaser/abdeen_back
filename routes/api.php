@@ -15,8 +15,11 @@ use App\Http\Controllers\Api\AttributeController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\PageContentController;
 use App\Http\Controllers\Api\AttributeTagsController;
+use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductArchivesController;
+use App\Http\Controllers\Api\ProductTagsController;
+use App\Http\Controllers\Api\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +35,25 @@ Route::get('/user', function (Request $request) {
 Route::get('/locale/{lang}', [LocaleController::class, 'setlocale']);
 Route::prefix('site')->group(function () {
     Route::get('menu-categories', [CategoryController::class,  "menuCategory"])->name('menu-categories');
+    Route::get('active-languages', [LanguageController::class , 'active'])->name('active-languages');
+    Route::get('all-countries', [CountryController::class, 'index'])->name('all-countries');
+    Route::get('all-states', [StateController::class, 'index'])->name('all-states');
+    Route::get('all-cities', [CityController::class, 'index'])->name('all-cities');
+    Route::post('login', [UserController::class, 'login'])->name('login');
+    Route::post('singup', [UserController::class, 'store'])->name('singup');
+    
+    
+    Route::controller(ProductController::class)->group(function () {
+        Route::get('topbuy-products', 'topSellingProducts')->name('topbuy-products');
+        Route::get('all-products',  'allproducts')->name('all-products');
+        Route::get('topDiscounted-products', 'topDiscountedProducts')->name('topDiscounted-products');
+        Route::get('show-product/{id}',  'cartProduct')->name('show-product');
+    });
+
+    Route::controller(OrderController::class)->middleware('auth:sanctum')->group(function () {
+        Route::post('store-order', 'store')->name('store-order');
+    });
+
 });
 
 
@@ -44,6 +66,8 @@ Route::prefix('admin')->group(function () {
         Route::get('refresh-token', 'index')->name('refresh-token');
         Route::post('store-admin', 'store')->name('store-admin');
         Route::post('update-admin/{id}', 'update')->name('update-admin');
+        Route::post('update-admin-address/{id}', 'updateAddress')->name('update-admin-address');
+        Route::get('show-admin/{id}', 'show')->name('show-admin');
         Route::get('changestatus-admin/{id}', 'changestatus')->name('changestatus-admin');
         Route::get('softdelete-admin/{id}', 'destroy')->name('softdelete-admin');
         Route::post('archive-admin-array', 'softDeleteArray')->name('archive-admin-array');
@@ -53,6 +77,7 @@ Route::prefix('admin')->group(function () {
         Route::get('all-users', 'index')->name('all-users');
         Route::post('store-user', 'store')->name('store-user');
         Route::post('update-user/{id}', 'update')->name('update-user');
+        Route::get('show-user/{id}', 'show')->name('show-user');
         Route::get('changestatus-user/{id}', 'changestatus')->name('changestatus-user');
         Route::get('softdelete-user/{id}', 'destroy')->name('softdelete-user'); // Corrected to 'softDelete'
         Route::post('archive-user-array', 'softDeleteArray')->name('archive-user-array');
@@ -90,6 +115,7 @@ Route::prefix('admin')->group(function () {
         Route::get('all-categories-list', 'allcategories')->name('all-categories-list');
         Route::post('store-category', 'store')->name('store-category');
         Route::post('update-category/{id}', 'update')->name('update-category');
+        Route::get('show-category/{id}', 'show')->name('show-category');
         Route::get('delete-category/{id}', 'destroy')->name('delete-category');
         Route::get('changestatus-category/{id}', 'changestatus')->name('changestatus-category');
         Route::get('changeview-category/{id}', 'changeview')->name('changeview-category');
@@ -100,6 +126,7 @@ Route::prefix('admin')->group(function () {
         Route::get('all-brands', 'index')->name('all-brands');
         Route::post('store-brand', 'store')->name('store-brand');
         Route::post('update-brand/{id}', 'update')->name('update-brand');
+        Route::get('show-brand/{id}', 'show')->name('show-brand');
         Route::get('changestatus-brand/{id}', 'changestatus')->name('changestatus-brand');
         Route::get('delete-brand/{id}', 'destroy')->name('delete-brand');
         Route::post('delete-brands', 'destroyarray')->name('delete-brands');
@@ -128,10 +155,20 @@ Route::prefix('admin')->group(function () {
         Route::get('all-products', 'index')->name('all-products');
         // Route::get('all-products-id/{id}', 'alltags')->name('all-products-id');
         Route::post('store-product', 'store')->name('store-product');
-        // Route::post('update-product/{id}', 'update')->name('update-product');
+        Route::get('show-product/{id}', 'show')->name('show-product');
+        Route::get('show-product-images/{productId}', 'showImages')->name('show-product-images');
+        Route::post('store-product-image/{productId}', 'storeImage')->name('store-product-image');
+        Route::delete('delete-product-image/{productId}/{imageId}', 'deleteImage')->name('delete-product-image');
+        Route::post('update-product/{id}', 'update')->name('update-product');
         Route::get('changestatus-product/{id}', 'changestatus')->name('changestatus-product');
         Route::get('delete-product/{id}', 'destroy')->name('delete-product');
         Route::post('delete-products', 'softDeleteArray')->name('delete-products');
+    });
+
+    Route::controller(ProductTagsController::class)->middleware('auth:sanctum')->group(function () {
+        Route::post('store-productTag', 'store')->name('store-productTag');
+        Route::get('get-productTag/{id}', 'getTagByProductId')->name('get-productTag');
+        Route::get('delete-productTag/{id}', 'destroy')->name('delete-productTag');
     });
 
     Route::controller(ProductArchivesController::class)->middleware('auth:sanctum')->group(function () {
@@ -184,5 +221,14 @@ Route::prefix('admin')->group(function () {
         Route::post('update-contact/{id}', 'update')->name('update-contact');
         Route::post('show-contact', 'show')->name('show-contact');
         Route::get('delete-contact/{id}', 'destroy')->name('delete-contact');
+    });
+
+    Route::controller(LanguageController::class)->middleware('auth:sanctum')->group(function () {
+        Route::get('all-languages', 'index')->name('all-languages');
+        Route::post('add-language', 'store')->name('add-language');
+        Route::post('add-word/{slug}', 'addWordToAdminFile')->name('add-word');
+        Route::post('show-translation/{slug}', 'show')->name('show-translation');
+        Route::get('delete-language/{id}', 'destroy')->name('delete-language');
+        Route::get('changestatus-language/{id}', 'changestatus')->name('changestatus-language');
     });
 });

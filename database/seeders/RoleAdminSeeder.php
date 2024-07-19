@@ -15,13 +15,14 @@ class RoleAdminSeeder extends Seeder
     {
         $admins = [
             [
-                'name' => 'developer',
+                'name' => 'super admin',
                 'status' => '1',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'name' => 'super admin',
+                'id' => 5251,
+                'name' => 'developer',
                 'status' => '1',
                 'created_at' => now(),
                 'updated_at' => now(),

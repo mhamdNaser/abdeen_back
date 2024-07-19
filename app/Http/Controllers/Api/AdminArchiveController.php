@@ -69,13 +69,13 @@ class AdminArchiveController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Admin soft deleted successfully.'
+                'message' => 'Admin Recovery successfully.'
             ], 200);
         } catch (\Throwable $e) {
             DB::rollback();
             return response()->json([
                 'success' => false,
-                'message' => 'Admin soft delete failed' . $e->getMessage()
+                'message' => 'Admin Recovery failed' . $e->getMessage()
             ], 500);
         }
     }

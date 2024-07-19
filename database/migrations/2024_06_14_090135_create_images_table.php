@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('images', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('path');
             $table->string('imageType')->nullable();
             $table->unsignedBigInteger('imageable_id');
             $table->string('imageable_type');
             $table->timestamps();
+
+            $table->index(['imageable_id', 'imageable_type']);
         });
     }
 

@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -28,7 +31,36 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validate the incoming request data
+        $request->validate([
+            'products.*.id' => 'required|integer|exists:products,id',
+            'products.*.quantity' => 'required|integer',
+            'totalprice' => 'required|integer',
+        ]);
+
+        // Create the order record
+        $order = Order::create([
+            'user_id' => Auth::user()->id,
+            'status' => "pending",
+            'total_price' => $request->totalprice, 
+        ]);
+
+        foreach ($request->products as $productData) {
+            $product = OrderProduct::create([
+                'order_id' => $order->id,
+                'product_id' => $productData['id'],
+                'quantity' => $productData['quantity'], 
+                'tag_id' => null, 
+            ]);
+        }
+
+        $order->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order created successfully',
+            'data' => $order, // Return the created order if needed
+        ], 201);
     }
 
     /**

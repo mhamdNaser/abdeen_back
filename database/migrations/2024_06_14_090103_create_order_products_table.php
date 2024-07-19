@@ -15,8 +15,10 @@ return new class extends Migration
             $table->bigIncrements('id')->unsigned()->unique();
             $table->foreignId('order_id')->unsigned()->index();
             $table->unsignedBigInteger('product_id')->nullable();
+            $table->foreignId('tag_id')->nullable();
             $table->timestamps();
 
+            $table->foreign('tag_id')->references('id')->on('attribute_tags')->onDelete('cascade');
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('set null');
         });

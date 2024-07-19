@@ -46,19 +46,25 @@ class BrandController extends Controller
         $validated = $request->validated();
 
         $brand = Brand::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
+            'en_name' => $validated['en_name'],
+            'ar_name' => $validated['ar_name'],
+            'en_description' => $validated['en_description'],
+            'ar_description' => $validated['ar_description'],
             'country_id' => $validated['country_id'] ?? null,
             'status' => 1,
         ]);
 
         if ($request->hasFile('image')) {
-            $imagePath = $this->uploadImage($request->file('image'));
+            $imageName = $validated['en_name'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
 
-            // Create image record
-            $image = new Image();
-            $image->name = $imagePath;
-            $brand->images()->save($image);
+            // Specify the destination directory within the public disk
+            $destinationPath = public_path('upload/images/brands/');
+
+            // Move the uploaded file to the destination directory
+            $validated['image']->move($destinationPath, $imageName);
+
+            // Construct the image path
+            $imagePath = 'upload/images/brands/' . $imageName;
 
             $brand->update([
                 'image' => $imagePath
@@ -77,15 +83,6 @@ class BrandController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Brand $brand)
-    {
-        //
-    }
-
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(BrandRequest $request, $id)
@@ -95,17 +92,36 @@ class BrandController extends Controller
         $validatedData = $request->validated();
 
         $updateData = [
-            'name' => $validatedData['name'] ?? $brand->name,
-            'description' => $validatedData['description'] ?? $brand->description,
+            'en_name' => $validatedData['en_name'] ?? $brand->en_name,
+            'ar_name' => $validatedData['ar_name'] ?? $brand->ar_name,
+            'en_description' => $validatedData['en_description'] ?? $brand->en_description,
+            'ar_description' => $validatedData['ar_description'] ?? $brand->ar_description,
             'country_id' => $validatedData['country_id'] == null ? $brand->country_id : $validatedData['country_id'],
             'status' => 1,
         ];
 
         if ($request->hasFile('image')) {
-            $imagePath = $this->uploadImage($request->file('image'));
-            $updateData['image'] = $imagePath;
-        }else{
-            $updateData['image'] = $brand->image;
+            $imageName = $validatedData['en_name'] . uniqid() . '.' . $validatedData['image']->getClientOriginalExtension();
+
+            // Specify the destination directory within the public disk
+            $destinationPath = public_path('upload/images/brands/');
+
+            // Move the uploaded file to the destination directory
+            $validatedData['image']->move($destinationPath, $imageName);
+
+            // Construct the image path
+            $imagePath = 'upload/images/brands/' . $imageName;
+
+            // If the category already has an image, delete the old image
+            if ($brand->image) {
+                $oldImagePath = public_path($brand->image);
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+                $updateData['image'] = $imagePath;
+            } else {
+                $updateData['image'] = $imagePath;
+            }
         }
 
         $brand->update($updateData);
@@ -117,6 +133,26 @@ class BrandController extends Controller
             'success' => true,
             'message' => '  Brand updated successfully.',
             'data' => $updateData
+        ], 200);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $brand = Brand::find($id);
+
+        if (!$brand) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'brand' => new BrandResource($brand),
         ], 200);
     }
 
@@ -150,15 +186,24 @@ class BrandController extends Controller
         DB::beginTransaction();
 
         try {
-            // Fetch admins with IDs matching $idsToDelete
-            $categoriesToTable = Brand::whereIn('id', $idsToDelete)->get();
+            // Fetch brands with IDs matching $idsToDelete
+            $brandsToDelete = Brand::whereIn('id', $idsToDelete)->get();
 
-            // Move admins to AdminArchive and delete from Admin
-            foreach ($categoriesToTable as $category) {
-                $category->delete();
+            // Delete images of each brand from storage
+            foreach ($brandsToDelete as $brand) {
+                if ($brand->image) {
+                    $imagePath = public_path($brand->image);
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath);
+                    }
+                }
+                $brand->delete();
             }
 
             DB::commit();
+
+            // Clear the cache since brands have been deleted
+            Cache::forget('brands_cache');
 
             return response()->json([
                 'success' => true,
@@ -179,30 +224,37 @@ class BrandController extends Controller
      */
     public function destroy($id)
     {
-        $brand =  Brand::findOrFail($id);
-        $brand->delete();
+        DB::beginTransaction();
 
-        // Clear the cache since a role has been deleted
-        Cache::forget('brands_cache');
+        try {
+            $brand = Brand::findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Brand deleted successfully.'
-        ], 200);
-    }
+            // Delete images of the brand from storage
+            if ($brand->image) {
+                $imagePath = public_path($brand->image);
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
+            }
 
-    private function uploadImage($imageFile)
-    {
-        // Generate unique image name
-        $imageName = uniqid() . '_' . $imageFile->getClientOriginalName();
+            $brand->delete();
 
-        // Specify the destination directory within the public disk
-        $destinationPath = public_path('upload/images/brand/');
+            DB::commit();
 
-        // Move the uploaded file to the destination directory
-        $imageFile->move($destinationPath, $imageName);
+            // Clear the cache since a brand has been deleted
+            Cache::forget('brands_cache');
 
-        // Return the image path
-        return 'upload/images/brand/' . $imageName;
+            return response()->json([
+                'success' => true,
+                'message' => 'Brand deleted successfully.'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete brand.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('brands', function (Blueprint $table) {
             $table->bigIncrements('id')->unsigned()->unique();
-            $table->string('name');
-            $table->string('description');
+            $table->string('en_name');
+            $table->string('ar_name');
+            $table->string('en_description');
+            $table->string('ar_description');
             $table->unsignedBigInteger('country_id')->nullable();
             $table->string('image')->nullable();
             $table->boolean('status');

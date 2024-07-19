@@ -24,14 +24,17 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sku'           => 'nullable|string|max:255',
-            'name'          => 'nullable|string|max:255',
-            'description'   => 'nullable|string|max:255',
-            'price'         => 'nullable|integer',
-            'quantity'      => 'nullable|integer',
-            'category_id'   => 'nullable|integer',
-            'brand_id'      => 'nullable|integer',
-            'image'         => 'nullable|mimes:png,jpg',
+            'sku'               => 'nullable|string|max:255',
+            'en_name'           => 'nullable|string|max:255',
+            'ar_name'           => 'nullable|string|max:255',
+            'en_description'    => 'nullable|string',
+            'ar_description'    => 'nullable|string',
+            'price'             => 'nullable|integer',
+            'quantity'          => 'nullable|integer',
+            'discount'          => 'nullable|integer',
+            'category_id'       => 'nullable|integer',
+            'brand_id'          => 'nullable|integer',
+            'image'             => 'nullable',
         ];
     }
     public function failedValidation(Validator $validator)

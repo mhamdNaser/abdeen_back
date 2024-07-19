@@ -24,9 +24,11 @@ class TagsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'          => 'required|string|max:255',
-            'description'   => 'required|string|max:255',
-            'attribute_id'  => 'nullable|integer',
+            'en_name'          => 'required|string|max:255',
+            'ar_name'          => 'required|string|max:255',
+            'en_description'   => 'required|string',
+            'ar_description'   => 'required|string',
+            'attribute_id'     => 'nullable|integer',
         ];
     }
     public function failedValidation(Validator $validator)

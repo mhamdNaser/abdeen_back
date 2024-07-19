@@ -16,8 +16,11 @@ class CategorySeeder extends Seeder
     {
         $roleadmins = [
             [
-                'name' => 'No Parent',
-                'description' => '',
+                'en_name' => 'No Parent',
+                'ar_name' => 'رئيسي',
+                'en_description' => '',
+                'ar_description' => '',
+                'in_menu' => 0,
                 'status' => 1,
             ],
         ];

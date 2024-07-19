@@ -70,6 +70,45 @@ class UserController extends Controller
         }
     }
 
+    public function changestatus($id)
+    {
+        $User = User::findOrFail($id);
+
+        // Toggle the status between 1 and 0
+        $User->update([
+            'status' => $User->status == 1 ? 0 : 1,
+        ]);
+
+        // Clear the cache since a role status has been updated
+        Cache::forget('Users_cache');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User status updated successfully.',
+            "data" => $User
+        ], 200);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'admin' => new UsersResource($user),
+        ], 200);
+    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -102,17 +141,18 @@ class UserController extends Controller
             $imageName = $validated['username'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
 
             // Specify the destination directory within the public disk
-            $destinationPath = public_path('upload/images/User/');
+            $destinationPath = public_path('upload/images/users/');
 
             // Move the uploaded file to the destination directory
             $validated['image']->move($destinationPath, $imageName);
 
             // Construct the image path
-            $imagePath = 'upload/images/User/' . $imageName;
+            $imagePath = 'upload/images/users/' . $imageName;
 
             // Create image record
             $image = new Image();
-            $image->name = $imagePath; // Store the image path
+            $image->path = $imagePath; // Store the image path
+            $image->name = $imageName; // Store the image path
             $User->images()->save($image);
 
             $User->update([
@@ -142,10 +182,8 @@ class UserController extends Controller
         DB::beginTransaction();
 
         try {
-            // Fetch Users with IDs matching $idsToDelete
             $UsersToDelete = User::whereIn('id', $idsToDelete)->get();
 
-            // Move Users to UserArchive and delete from User
             foreach ($UsersToDelete as $User) {
                 UserArchives::create([
                     'username' => $User->username,
@@ -158,8 +196,18 @@ class UserController extends Controller
                     'country_id' => $User->country_id,
                     'state_id' => $User->state_id,
                     'city_id' => $User->city_id,
-                    'image' => $User->image,
+                    'image' => null,
                 ]);
+
+                $images = $User->images;
+
+                foreach ($images as $image) {
+                    $imagePath = public_path($image->path);
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath);
+                    }
+                    $image->delete();
+                }
 
                 $User->delete();
             }
@@ -180,31 +228,6 @@ class UserController extends Controller
         }
     }
 
-    public function changestatus($id)
-    {
-        $User = User::findOrFail($id);
-
-        // Toggle the status between 1 and 0
-        $User->update([
-            'status' => $User->status == 1 ? 0 : 1,
-        ]);
-
-        // Clear the cache since a role status has been updated
-        Cache::forget('Users_cache');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'User status updated successfully.',
-            "data" => $User
-        ], 200);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show($id)
-    {
-    }
 
     /**
      * Update the specified resource in storage.
@@ -235,8 +258,34 @@ class UserController extends Controller
         }
 
         // Handle image upload if provided
-        if ($request->hasFile('image')) {
-            $imagePath = $this->uploadImage($request->file('image'));
+        if ($validated['image']) {
+            $imageName = $validated['username'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
+
+            // Specify the destination directory within the public disk
+            $destinationPath = public_path('upload/images/users/');
+
+            // Move the uploaded file to the destination directory
+            $validated['image']->move($destinationPath, $imageName);
+
+            // Construct the image path
+            $imagePath = 'upload/images/users/' . $imageName;
+
+            // Check if user already has an image
+            $existingImage = $User->images()->first();
+            if ($existingImage) {
+                // Update existing image record
+                $existingImage->name = $imageName;
+                $existingImage->path = $imagePath;
+                $existingImage->save();
+            } else {
+                // Create a new image record
+                $image = new Image();
+                $image->name = $imageName;
+                $image->path = $imagePath;
+                $User->images()->save($image);
+            }
+
+            // Update user's image path
             $updateData['image'] = $imagePath;
         }
 
@@ -255,6 +304,7 @@ class UserController extends Controller
             'User' => $User, // Optionally return the updated User data
         ], 200);
     }
+
 
 
     /**
@@ -277,9 +327,24 @@ class UserController extends Controller
                 'country_id' => $User->country_id,
                 'state_id' => $User->state_id,
                 'city_id' => $User->city_id,
-                'image' => $User->image,
+                'image' => null,
             ]);
 
+            // Get all images of the user
+            $images = $User->images;
+
+            // Delete image records from database
+            foreach ($images as $image) {
+                // Delete image file from the server
+                $imagePath = public_path($image->path);
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
+                // Delete the image record from the database
+                $image->delete();
+            }
+
+            // Delete the user record
             $User->delete();
 
             Cache::forget("Users_cache");
@@ -294,24 +359,10 @@ class UserController extends Controller
             DB::rollback();
             return response()->json([
                 'success' => false,
-                'message' => 'User soft delete failed' . $e->getMessage()
+                'message' => 'User soft delete failed. ' . $e->getMessage()
             ], 500);
         }
     }
 
 
-    private function uploadImage($imageFile)
-    {
-        // Generate unique image name
-        $imageName = uniqid() . '_' . $imageFile->getClientOriginalName();
-
-        // Specify the destination directory within the public disk
-        $destinationPath = public_path('upload/images/User/');
-
-        // Move the uploaded file to the destination directory
-        $imageFile->move($destinationPath, $imageName);
-
-        // Return the image path
-        return 'upload/images/User/' . $imageName;
-    }
 }

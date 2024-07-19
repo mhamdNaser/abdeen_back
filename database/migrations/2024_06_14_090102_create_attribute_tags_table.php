@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('attribute_tags', function (Blueprint $table) {
             $table->bigIncrements('id')->unsigned()->unique();
-            $table->string('name');
-            $table->string('description');
+            $table->string('en_name');
+            $table->string('ar_name');
+            $table->string('en_description');
+            $table->string('ar_description');
             $table->foreignId('attribute_id')->unsigned()->index();
             $table->boolean('status');
             $table->timestamps();

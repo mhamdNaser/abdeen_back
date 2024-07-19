@@ -24,7 +24,8 @@ class AttributeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'          => 'required|string|max:255',
+            'en_name'          => 'required|string|max:255',
+            'ar_name'          => 'required|string|max:255',
         ];
     }
     public function failedValidation(Validator $validator)

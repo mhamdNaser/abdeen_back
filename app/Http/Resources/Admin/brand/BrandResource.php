@@ -16,8 +16,10 @@ class BrandResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'description' => $this->description,
+            'en_name' => $this->en_name,
+            'ar_name' => $this->ar_name,
+            'en_description' => $this->en_description,
+            'ar_description' => $this->ar_description,
             'country' => $this->country->name,
             'status' => $this->status,
             'image' => $this->image ?  $this->image : null, // Assuming the image is stored in the public storage
