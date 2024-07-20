@@ -52,4 +52,9 @@ class User extends Authenticatable
         return $this->belongsTo(city::class, 'city_id');
     }
 
+    public function users()
+    {
+        return $this->hasMany(Order::class, 'user_id');
+    }
+
 }

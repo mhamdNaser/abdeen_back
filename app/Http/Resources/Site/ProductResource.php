@@ -15,34 +15,7 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // return [
-        //     'id' => $this->id,
-        //     'sku' => $this->sku,
-        //     'en_name' => $this->en_name,
-        //     'ar_name' => $this->ar_name,
-        //     'en_description' => $this->en_description,
-        //     'ar_description' => $this->ar_description,
-        //     'price' => $this->price,
-        //     'discount' => $this->discount,
-        //     'quantity' => $this->quantity,
-        //     'image' => $this->image ?  $this->image : null,
-        //     "en_brand" => $this->brand ? $this->brand->en_name : null,
-        //     "ar_brand" => $this->brand ? $this->brand->ar_name : null,
-        //     "en_category" => $this->category->en_name,
-        //     "ar_category" => $this->category->ar_name,
-        //     "made_in" => $this->brand ? $this->brand->country->name : null,
-        //     "status" => $this->status,
-        //     'tags' => $this->tags->map(function ($tag) {
-        //         return [
-        //             'id' => $this->id,
-        //             'en_name' => $this->en_name,
-        //             'ar_name' => $this->ar_name,
-        //             'en_description' => $this->en_description,
-        //             'ar_description' => $this->ar_description,
-        //             "attribute" => $this->tag->attribute ? $this->tag->attribute->en_name : null,
-        //         ];
-        //     }),
-        // ];
+    
         return [
             'id' => $this->id,
             'sku' => $this->sku,
