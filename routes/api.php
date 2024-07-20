@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductArchivesController;
 use App\Http\Controllers\Api\ProductTagsController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\SocialMediaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,7 @@ Route::prefix('site')->group(function () {
     Route::get('all-cities', [CityController::class, 'index'])->name('all-cities');
     Route::post('login', [UserController::class, 'login'])->name('login');
     Route::post('singup', [UserController::class, 'store'])->name('singup');
+    Route::get('socialmedia', [SocialMediaController::class, 'index'])->name('socialmedia');
     
     
     Route::controller(ProductController::class)->group(function () {

@@ -1,6 +1,6 @@
 <?php
 
-return array (
+return array(
   'English' => 'الإنكليزية',
   'Arabic' => 'العربية',
   'countries' => 'بلدان',
@@ -32,4 +32,33 @@ return array (
   'Category' => 'التصنيف',
   'Brand' => 'العلامة تجارية',
   'Quantity' => 'الكمية',
+  'ELEGANCE' => 'الأناقة',
+  'IN' => 'في',
+  'TIME' => 'الوقت المناسب',
+  'ABDEEN' => 'عابدين',
+  'for' => 'لتجارة',
+  'Watches' => 'الساعات',
+  'contact' => 'توصل معنا',
+  'help center' => 'مركز الخدمة والمساعدة',
+  'Best Saller' => 'المنتجات المميزة',
+  'Special Offer' => 'أفضل الخصومات',
+  'support' => 'الدعم',
+  'about us' => 'من نحن',
+  'company' => 'الشركة',
+  'Designed and Developed by' => 'تصميم وتطوير بواسطة',
+  'Copyright © 2024 ABDEEN for watches. All rights reserved.' => 'حقوق النشر © 2024 عابدين للساعات. كل الحقوق محفوظة.',
+  'privacy policy' => 'سياسة الخصوصية',
+  'terms and conditions' => 'الأحكام والشروط',
+  'All Products' => 'جميع المنتجات',
+  'Add to Cart' => 'إضافة إلى السلة',
+  'Discover a diverse collection of the finest watch brands with' => 'اكتشف مجموعة متنوعة من أرقى ماركات الساعات مع',
+  'where luxury and quality meet.' => 'حيث تجتمع الفخامة والجودة.',
+
+
+  // The Sentences where abbreviated by one word
+  'footer' => 'اكتشف مجموعة متنوعة من أرقى ماركات الساعات و
+ نظارات شمسية من عابدين، حيث تجتمع الفخامة والجودة لتقدمها لك
+ مجموعة لا مثيل لها من الساعات والنظارات التي تمتزج
+ الأناقة والحرفية والأسلوب.'
+
 );
