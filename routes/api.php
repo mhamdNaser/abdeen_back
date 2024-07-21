@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\ProductArchivesController;
 use App\Http\Controllers\Api\ProductTagsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SocialMediaController;
+use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,7 @@ Route::get('/user', function (Request $request) {
 Route::get('/locale/{lang}', [LocaleController::class, 'setlocale']);
 Route::prefix('site')->group(function () {
     Route::get('menu-categories', [CategoryController::class,  "menuCategory"])->name('menu-categories');
+    Route::get('menu-Brand', [BrandController::class,  "menuBrand"])->name('menu-Brand');
     Route::get('active-languages', [LanguageController::class , 'active'])->name('active-languages');
     Route::get('all-countries', [CountryController::class, 'index'])->name('all-countries');
     Route::get('all-states', [StateController::class, 'index'])->name('all-states');
@@ -43,6 +45,9 @@ Route::prefix('site')->group(function () {
     Route::post('login', [UserController::class, 'login'])->name('login');
     Route::post('singup', [UserController::class, 'store'])->name('singup');
     Route::get('socialmedia', [SocialMediaController::class, 'index'])->name('socialmedia');
+    Route::get('show-brand/{name}', [BrandController::class, 'showbyname'])->name('show-brand');
+    Route::get('show-category/{name}', [CategoryController::class, 'showbyname'])->name('show-category');
+    Route::get('get-productTag/{id}', [ProductTagsController::class , 'getTagByProductId'])->name('get-productTag');
     
     
     Route::controller(ProductController::class)->group(function () {
@@ -51,6 +56,7 @@ Route::prefix('site')->group(function () {
         Route::get('all-products',  'allproducts')->name('all-products');
         Route::get('topDiscounted-products', 'topDiscountedProducts')->name('topDiscounted-products');
         Route::get('show-product/{id}',  'cartProduct')->name('show-product');
+        Route::get('show-product-images/{productId}', 'showImages')->name('show-product-images');
     });
 
     Route::controller(OrderController::class)->middleware('auth:sanctum')->group(function () {

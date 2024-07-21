@@ -37,6 +37,13 @@ class BrandController extends Controller
         return BrandResource::collection($brands);
     }
 
+    public function menuBrand()
+    {
+        $brands = Brand::where("status", 1)->get();
+
+        return BrandResource::collection($brands);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -153,6 +160,23 @@ class BrandController extends Controller
         return response()->json([
             'success' => true,
             'brand' => new BrandResource($brand),
+        ], 200);
+    }
+
+    public function showbyname($name)
+    {
+        $brand = Brand::where("en_name", $name)->first();
+
+        if (!$brand) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'brand' => $brand,
         ], 200);
     }
 

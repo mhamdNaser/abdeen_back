@@ -191,6 +191,23 @@ class CategoryController extends Controller
             'category' => new CategoryResource($category),
         ], 200);
     }
+    
+    public function showbyname($name)
+    {
+        $category = Category::where("en_name", $name)->first();
+
+        if (!$category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'category' => new CategoryResource($category),
+        ], 200);
+    }
 
     public function changestatus($id)
     {
