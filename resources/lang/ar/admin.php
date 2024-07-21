@@ -50,6 +50,7 @@ return array(
   'privacy policy' => 'سياسة الخصوصية',
   'terms and conditions' => 'الأحكام والشروط',
   'All Products' => 'جميع المنتجات',
+  'Products' => 'منتجات',
   'Add to Cart' => 'إضافة إلى السلة',
   'Discover a diverse collection of the finest watch brands with' => 'اكتشف مجموعة متنوعة من أرقى ماركات الساعات مع',
   'where luxury and quality meet.' => 'حيث تجتمع الفخامة والجودة.',

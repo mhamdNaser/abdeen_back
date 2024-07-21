@@ -59,6 +59,15 @@ class ProductController extends Controller
         return ProductResourceSite::collection($products);
     }
 
+    public function categoryProducts($id)
+    {
+        // Fetch the top 6 products with the highest buy_num
+        $categoryProducts = Product::where('category_id', $id)->get();
+
+        // Return the products as a resource collection
+        return ProductResource::collection($categoryProducts);
+    }
+
     public function topSellingProducts()
     {
         // Fetch the top 6 products with the highest buy_num

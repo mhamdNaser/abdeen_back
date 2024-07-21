@@ -47,6 +47,7 @@ Route::prefix('site')->group(function () {
     
     Route::controller(ProductController::class)->group(function () {
         Route::get('topbuy-products', 'topSellingProducts')->name('topbuy-products');
+        Route::get('category-products/{id}', 'categoryProducts')->name('category-products');
         Route::get('all-products',  'allproducts')->name('all-products');
         Route::get('topDiscounted-products', 'topDiscountedProducts')->name('topDiscounted-products');
         Route::get('show-product/{id}',  'cartProduct')->name('show-product');
