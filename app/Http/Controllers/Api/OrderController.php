@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Site\OrderResource;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use Illuminate\Http\Request;
@@ -15,7 +16,9 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        $userOrders = Order::all();
+
+        return OrderResource::collection($userOrders);
     }
 
     /**
@@ -35,6 +38,9 @@ class OrderController extends Controller
         $request->validate([
             'products.*.id' => 'required|integer|exists:products,id',
             'products.*.quantity' => 'required|integer',
+            'price' => 'required|integer',
+            'tax' => 'required|integer',
+            'delivery' => 'required|integer',
             'totalprice' => 'required|integer',
         ]);
 
@@ -42,6 +48,9 @@ class OrderController extends Controller
         $order = Order::create([
             'user_id' => Auth::user()->id,
             'status' => "pending",
+            'price' => $request->price,
+            'tax' => $request->tax,
+            'delivery' => $request->delivery, 
             'total_price' => $request->totalprice, 
         ]);
 
@@ -69,6 +78,13 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         //
+    }
+
+    public function ordersUser($id)
+    {
+        $userOrders = Order::where('user_id', $id)->get();
+
+        return OrderResource::collection($userOrders);
     }
 
     /**

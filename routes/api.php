@@ -38,18 +38,19 @@ Route::get('/locale/{lang}', [LocaleController::class, 'setlocale']);
 Route::prefix('site')->group(function () {
     Route::get('menu-categories', [CategoryController::class,  "menuCategory"])->name('menu-categories');
     Route::get('menu-Brand', [BrandController::class,  "menuBrand"])->name('menu-Brand');
-    Route::get('active-languages', [LanguageController::class , 'active'])->name('active-languages');
+    Route::get('active-languages', [LanguageController::class, 'active'])->name('active-languages');
     Route::get('all-countries', [CountryController::class, 'index'])->name('all-countries');
     Route::get('all-states', [StateController::class, 'index'])->name('all-states');
     Route::get('all-cities', [CityController::class, 'index'])->name('all-cities');
     Route::post('login', [UserController::class, 'login'])->name('login');
     Route::post('singup', [UserController::class, 'store'])->name('singup');
     Route::get('socialmedia', [SocialMediaController::class, 'index'])->name('socialmedia');
+    Route::get('show-oreders/{id}', [OrderController::class, 'ordersUser'])->name('show-oreders');
     Route::get('show-brand/{name}', [BrandController::class, 'showbyname'])->name('show-brand');
     Route::get('show-category/{name}', [CategoryController::class, 'showbyname'])->name('show-category');
-    Route::get('get-productTag/{id}', [ProductTagsController::class , 'getTagByProductId'])->name('get-productTag');
-    
-    
+    Route::get('get-productTag/{id}', [ProductTagsController::class, 'getTagByProductId'])->name('get-productTag');
+
+
     Route::controller(ProductController::class)->group(function () {
         Route::get('topbuy-products', 'topSellingProducts')->name('topbuy-products');
         Route::get('category-products/{id}', 'categoryProducts')->name('category-products');
@@ -62,7 +63,6 @@ Route::prefix('site')->group(function () {
     Route::controller(OrderController::class)->middleware('auth:sanctum')->group(function () {
         Route::post('store-order', 'store')->name('store-order');
     });
-
 });
 
 
@@ -172,6 +172,10 @@ Route::prefix('admin')->group(function () {
         Route::get('changestatus-product/{id}', 'changestatus')->name('changestatus-product');
         Route::get('delete-product/{id}', 'destroy')->name('delete-product');
         Route::post('delete-products', 'softDeleteArray')->name('delete-products');
+    });
+
+    Route::controller(OrderController::class)->middleware('auth:sanctum')->group(function () {
+        Route::get('all-orders', 'index')->name('all-orders');
     });
 
     Route::controller(ProductTagsController::class)->middleware('auth:sanctum')->group(function () {
