@@ -26,7 +26,7 @@ class ProductTagRequest extends FormRequest
         return [
             'tag_id'         => 'nullable|integer',
             'product_id'     => 'nullable|integer',
-            'price'          => 'nullable|integer',
+            'price'          => 'nullable|numeric',
         ];
     }
     public function failedValidation(Validator $validator)

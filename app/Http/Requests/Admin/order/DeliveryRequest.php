@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Requests\Admin\product_details;
+namespace App\Http\Requests\Admin\order;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class UpdateProductRequest extends FormRequest
+class DeliveryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,18 +24,10 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sku'               => 'nullable|string|max:255',
-            'en_name'           => 'nullable|string|max:255',
-            'ar_name'           => 'nullable|string|max:255',
-            'en_description'    => 'nullable|string',
-            'ar_description'    => 'nullable|string',
-            'cost_Price'       => 'nullable|numeric',
-            'public_price'     => 'nullable|numeric',
-            'quantity'          => 'nullable|integer',
-            'discount'          => 'nullable|integer',
-            'category_id'       => 'nullable|integer',
-            'brand_id'          => 'nullable|integer',
-            'image'             => 'nullable',
+            'country_id'    => 'nullable|integer',
+            'state_id'      => 'nullable|integer',
+            'city_id'       => 'nullable|integer',
+            'cost'          => 'required|numeric',
         ];
     }
     public function failedValidation(Validator $validator)

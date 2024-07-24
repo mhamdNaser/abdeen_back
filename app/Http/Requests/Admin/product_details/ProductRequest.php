@@ -24,17 +24,17 @@ class ProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sku'           => 'required|string|max:255',
+            'sku'              => 'required|string|max:255',
             'en_name'          => 'required|string|max:255',
             'ar_name'          => 'required|string|max:255',
             'en_description'   => 'required|string',
             'ar_description'   => 'required|string',
-            'cost_Price'     => 'nullable|integer',
-            'public_price'     => 'nullable|integer',
-            'quantity'      => 'nullable|integer',
-            'category_id'   => 'nullable|integer',
-            'brand_id'      => 'nullable|integer',
-            'image'         => 'required|mimes:png,jpg',
+            'cost_Price'       => 'nullable|numeric',
+            'public_price'     => 'nullable|numeric',
+            'quantity'         => 'nullable|integer',
+            'category_id'      => 'nullable|integer',
+            'brand_id'         => 'nullable|integer',
+            'image'            => 'required|mimes:png,jpg',
         ];
     }
     public function failedValidation(Validator $validator)

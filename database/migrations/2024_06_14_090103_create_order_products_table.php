@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('order_id')->unsigned()->index();
             $table->unsignedBigInteger('product_id')->nullable();
             $table->foreignId('tag_id')->nullable();
+            $table->integer('quantity');
+            $table->double('price');
+            $table->double('discount');
             $table->timestamps();
 
             $table->foreign('tag_id')->references('id')->on('attribute_tags')->onDelete('cascade');

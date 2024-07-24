@@ -36,12 +36,15 @@ class OrderController extends Controller
     {
         // Validate the incoming request data
         $request->validate([
-            'products.*.id' => 'required|integer|exists:products,id',
-            'products.*.quantity' => 'required|integer',
-            'price' => 'required|integer',
-            'tax' => 'required|integer',
-            'delivery' => 'required|integer',
-            'totalprice' => 'required|integer',
+            'products.*.id' => 'required|numeric|exists:products,id',
+            'products.*.quantity' => 'required|numeric',
+            'products.*.price' => 'required|numeric',
+            'products.*.discount' => 'required|numeric',
+            'price' => 'required|numeric',
+            'tax' => 'required|numeric',
+            'delivery' => 'required|numeric',
+            'totalprice' => 'required|numeric',
+            'totaldiscount' => 'required|numeric',
         ]);
 
         // Create the order record
@@ -51,7 +54,8 @@ class OrderController extends Controller
             'price' => $request->price,
             'tax' => $request->tax,
             'delivery' => $request->delivery, 
-            'total_price' => $request->totalprice, 
+            'total_price' => $request->totalprice,
+            'total_discount' => $request->totaldiscount, 
         ]);
 
         foreach ($request->products as $productData) {

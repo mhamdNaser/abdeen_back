@@ -88,7 +88,14 @@ return array(
   'Tax' => 'الضريبة',
   'Delivery' => 'التوصيل',
   'Total Price' => 'السعر الإجمالي',
-  '' => '',
+  'Add Product To Make Order'=> 'أضف منتجات إلى السلة',
+  'Submit Order' => 'إعداد الطلب',
+  'Final Total' => 'التكلفة النهائية',
+  'Order' => 'قيمة الطلب',
+  'Without Delivery' => 'دون توصيل',
+  'Product Discount' => 'خصم المنتج',
+  'Total Discount' => 'الخصم الكلي',
+  'The net amount' => 'المبلغ الصافي',
   '' => '',
 
 

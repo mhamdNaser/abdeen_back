@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->unsigned()->index();
             $table->foreignId('tag_id');
-            $table->integer('price')->nullable();
+            $table->double('price')->nullable();
             $table->timestamps();
 
             $table->foreign('tag_id')->references('id')->on('attribute_tags')->onDelete('cascade');

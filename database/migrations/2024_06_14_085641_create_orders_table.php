@@ -15,10 +15,11 @@ return new class extends Migration
             $table->bigIncrements('id')->unsigned()->unique();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('status')->comment('in_hold, in_delivery, finish, returned');
-            $table->integer('price');
-            $table->integer('total_price');
-            $table->integer('tax');
-            $table->integer('delivery');
+            $table->double('price');
+            $table->double('total_price');
+            $table->double('total_discount');
+            $table->double('tax');
+            $table->double('delivery');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');

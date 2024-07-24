@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('ar_name');
             $table->string('en_description');
             $table->string('ar_description');
-            $table->integer('cost_Price');
-            $table->integer('public_price');
+            $table->double('cost_Price');
+            $table->double('public_price');
             $table->integer('discount');
             $table->integer('quantity');
             $table->integer('view_num')->default(0)->nullable();

@@ -15,12 +15,14 @@ use App\Http\Controllers\Api\AttributeController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\PageContentController;
 use App\Http\Controllers\Api\AttributeTagsController;
+use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductArchivesController;
 use App\Http\Controllers\Api\ProductTagsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SocialMediaController;
+use App\Http\Controllers\Api\TaxController;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -49,6 +51,15 @@ Route::prefix('site')->group(function () {
     Route::get('show-brand/{name}', [BrandController::class, 'showbyname'])->name('show-brand');
     Route::get('show-category/{name}', [CategoryController::class, 'showbyname'])->name('show-category');
     Route::get('get-productTag/{id}', [ProductTagsController::class, 'getTagByProductId'])->name('get-productTag');
+
+
+    Route::controller(DeliveryController::class)->group(function () {
+        Route::get('all-deliveries', 'index')->name('all-deliveries');
+    });
+
+    Route::controller(TaxController::class)->group(function () {
+        Route::get('tax', 'index')->name('tax');
+    });
 
 
     Route::controller(ProductController::class)->group(function () {
@@ -176,6 +187,16 @@ Route::prefix('admin')->group(function () {
 
     Route::controller(OrderController::class)->middleware('auth:sanctum')->group(function () {
         Route::get('all-orders', 'index')->name('all-orders');
+    });
+
+    Route::controller(DeliveryController::class)->middleware('auth:sanctum')->group(function () {
+        Route::get('all-deliveries', 'index')->name('all-deliveries');
+        Route::post('store-delivery', 'store')->name('store-delivery');
+    });
+
+    Route::controller(TaxController::class)->middleware('auth:sanctum')->group(function () {
+        Route::get('all-tax', 'index')->name('all-tax');
+        Route::post('store-tax', 'store')->name('store-tax');
     });
 
     Route::controller(ProductTagsController::class)->middleware('auth:sanctum')->group(function () {
