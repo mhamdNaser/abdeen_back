@@ -222,7 +222,7 @@ class ProductController extends Controller
             'status' => 1,
         ];
 
-        if ($validated['image']) {
+        if (isset($validated['image'])) {
             $imageName = $validated['en_name'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
 
             // Specify the destination directory within the public disk
