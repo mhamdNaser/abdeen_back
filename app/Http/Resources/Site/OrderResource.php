@@ -22,6 +22,7 @@ class OrderResource extends JsonResource
             "tax" => $this->tax,
             "delivery" => $this->delivery,
             'total_price'=> $this->total_price ,
+            'total_discount' => $this->total_discount,
             'status'=> $this->status ,
             'date' => Carbon::parse($this->created_at)->format('d-m-Y'),
         ];

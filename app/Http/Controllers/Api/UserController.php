@@ -244,13 +244,19 @@ class UserController extends Controller
 
         // Prepare data for update
         $updateData = [
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'],
+            'username' => $validated['username']  ?? $User->username,
+            'email' => $validated['email'] ?? $User->email,
+            'phone' => $validated['phone'] ?? $User->phone,
+            'country_id' => $validated['country_id'] ?? $User->country_id,
+            'state_id' => $validated['state_id'] ?? $User->state_id,
+            'city_id' => $validated['city_id'] ?? $User->city_id,
+            'address_1' => $validated['address_1'] ?? $User->address_1,
+            'address_2' => $validated['address_2'] ?? $User->address_2,
+            'address_3' => $validated['address_3'] ?? $User->address_3,
         ];
 
         // Update name fields if 'name' is present
-        if ($validated['name']) {
+        if (isset($validated['name'])) {
             $nameParts = explode(' ', $validated['name'], 3);
             $updateData['first_name'] = $nameParts[0];
             $updateData['medium_name'] = isset($nameParts[1]) ? $nameParts[1] : null;
@@ -258,7 +264,7 @@ class UserController extends Controller
         }
 
         // Handle image upload if provided
-        if ($validated['image']) {
+        if (isset($validated['image'])) {
             $imageName = $validated['username'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
 
             // Specify the destination directory within the public disk
@@ -301,7 +307,7 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully.',
-            'User' => $User, // Optionally return the updated User data
+            'User' => new UsersResource($User),
         ], 200);
     }
 
@@ -363,6 +369,4 @@ class UserController extends Controller
             ], 500);
         }
     }
-
-
 }

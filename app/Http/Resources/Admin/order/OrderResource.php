@@ -18,6 +18,7 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'total_price'=> $this->total_price ,
+            'total_discount'=> $this->total_discount,
             "status" => $this->status,
             'user' => $this->tags->map(function ($productTag) {
                 return [
