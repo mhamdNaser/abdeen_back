@@ -26,13 +26,13 @@ class AdminRoleController extends Controller
         $cacheKey = 'roles_cache';
 
         $roles = Cache::remember($cacheKey, $cacheDuration, function () {
-            return AdminRole::whereNot('id', 5251)->get();
+            return AdminRole::whereNot('id', 1)->get();
         });
 
-        $adminCountInDB = AdminRole::whereNot('id', 5251)->count();
+        $adminCountInDB = AdminRole::whereNot('id', 1)->count();
 
         if ($roles->count() !== $adminCountInDB) {
-            $roles = AdminRole::whereNot('id', 5251)->get();
+            $roles = AdminRole::whereNot('id', 1)->get();
             Cache::put($cacheKey, $roles, $cacheDuration);
         }
 

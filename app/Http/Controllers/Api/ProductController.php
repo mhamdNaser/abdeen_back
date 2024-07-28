@@ -357,14 +357,18 @@ class ProductController extends Controller
         try {
             $softdelete = ProductArchives::create([
                 'sku' => $product->sku,
-                'name' => $product->name,
+                'en_name' => $product->en_name,
+                'ar_name' => $product->ar_name,
                 'image' => $product->image,
-                'description' => $product->description,
-                'price' => $product->price,
+                'en_description' => $product->en_description,
+                'ar_description' => $product->ar_description,
+                'cost_Price' => $product->cost_Price,
+                'public_price' => $product->public_price,
                 'category_id' => $product->category_id,
                 'brand_id' => $product->brand_id,
                 'quantity' => 0,
                 'status' => 0,
+                'discount' => 0,
             ]);
 
             $images = $product->images;

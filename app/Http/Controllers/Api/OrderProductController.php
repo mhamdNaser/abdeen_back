@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\OrderProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderProductController extends Controller
 {
@@ -58,8 +60,18 @@ class OrderProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(OrderProduct $orderProduct)
+    public function destroy($id)
     {
-        //
+        $order = OrderProduct::findOrFail($id);
+        DB::beginTransaction();
+
+        $order->delete();
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Admin soft deleted successfully.'
+        ], 200);
     }
 }

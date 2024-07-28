@@ -192,7 +192,7 @@ class AdminController extends Controller
         }
 
         // Handle image upload if provided
-        if ($validated['image']) {
+        if (isset($validated['image'])) {
             $imageName = $validated['username'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
 
             // Specify the destination directory within the public disk

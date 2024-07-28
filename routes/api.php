@@ -23,9 +23,9 @@ use App\Http\Controllers\Api\ProductTagsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SocialMediaController;
 use App\Http\Controllers\Api\TaxController;
-use App\Models\Brand;
+use App\Http\Controllers\Api\OrderProductController;
+use App\Http\Controllers\Api\GlobalController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
@@ -73,12 +73,19 @@ Route::prefix('site')->group(function () {
 
     Route::controller(OrderController::class)->middleware('auth:sanctum')->group(function () {
         Route::post('store-order', 'store')->name('store-order');
+        Route::get('show-order/{id}', 'show')->name('show-order');
+        Route::get('delete-oreder/{id}', 'destroy')->name('delete-oreder');
+    });
+
+    Route::controller(OrderProductController::class)->middleware('auth:sanctum')->group(function () {
+        Route::get('delete-orderProduct/{id}', 'destroy')->name('delete-orderProduct');
     });
 });
 
 
 Route::prefix('admin')->group(function () {
     Route::post('login', [AdminController::class, 'login'])->name('admin.login');
+    Route::get('statistics', [GlobalController::class, 'getStatistics']);
 
     // Admins route >>> for deleted , add and update admins
     Route::controller(AdminController::class)->middleware('auth:sanctum')->group(function () {
@@ -187,6 +194,8 @@ Route::prefix('admin')->group(function () {
 
     Route::controller(OrderController::class)->middleware('auth:sanctum')->group(function () {
         Route::get('all-orders', 'index')->name('all-orders');
+        Route::get('pending-orders', 'pendingOrder')->name('pending-orders');
+        Route::post('changstatus-orders/{id}', 'update')->name('changstatus-orders');
     });
 
     Route::controller(DeliveryController::class)->middleware('auth:sanctum')->group(function () {
@@ -207,12 +216,9 @@ Route::prefix('admin')->group(function () {
 
     Route::controller(ProductArchivesController::class)->middleware('auth:sanctum')->group(function () {
         Route::get('all-archives-products', 'index')->name('all-archives-products');
-        // Route::get('all-products-id/{id}', 'alltags')->name('all-products-id');
-        // Route::post('store-product', 'store')->name('store-product');
-        // Route::post('update-product/{id}', 'update')->name('update-product');
-        // Route::get('changestatus-product/{id}', 'changestatus')->name('changestatus-product');
-        // Route::get('delete-product/{id}', 'destroy')->name('delete-product');
-        // Route::post('delete-products', 'softDeleteArray')->name('delete-products');
+        Route::post('update-product/{id}', 'update')->name('update-product');
+        Route::get('delete-archiveproduct/{id}', 'destroy')->name('delete-archiveproduct');
+        Route::post('delete-products-array', 'DeleteArray')->name('delete-products-array');
     });
 
     Route::controller(CountryController::class)->middleware('auth:sanctum')->group(function () {

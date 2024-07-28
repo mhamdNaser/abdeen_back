@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Site\OrderResource;
+use App\Http\Requests\Admin\order\OrderStatusRequest;
+use App\Http\Resources\Site\OrdersResource;
+use App\Http\Resources\Admin\order\OrderResource as OrderAdminResource;
+use App\Http\Resources\Site\ViewOrderResource;
 use App\Models\Order;
+use App\Models\OrderAddress;
 use App\Models\OrderProduct;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -19,7 +24,13 @@ class OrderController extends Controller
     {
         $userOrders = Order::all();
 
-        return OrderResource::collection($userOrders);
+        return OrderAdminResource::collection($userOrders);
+    }
+
+    public function pendingOrder()
+    {
+        $userOrders = Order::where('status', 'pending')->get();
+        return OrderAdminResource::collection($userOrders);
     }
 
     /**
@@ -42,6 +53,7 @@ class OrderController extends Controller
             'delivery' => 'required|numeric',
             'totalprice' => 'required|numeric',
             'totaldiscount' => 'required|numeric',
+            'address' => 'nullable'
         ]);
 
         // Create the order record
@@ -54,6 +66,20 @@ class OrderController extends Controller
             'total_price' => $request->totalprice,
             'total_discount' => $request->totaldiscount,
         ]);
+
+
+        if ($request->address) {
+            $orderAddress = OrderAddress::create([
+                'country_id' => $request->address["country_id"],
+                'state_id' => $request->address["state_id"],
+                'city_id' => $request->address["city_id"],
+                'address_1' => $request->address["address_1"],
+                'address_2' => $request->address["address_2"],
+                'address_3' => $request->address["address_3"],
+                'order_id' => $order->id,
+            ]);
+        }
+
 
         foreach ($request->products as $productData) {
             // Fetch product details from database based on product_id
@@ -91,16 +117,18 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Order $order)
+    public function show($id)
     {
-        //
+        $order = Order::with('orderProducts')->findOrFail($id);
+
+        return new ViewOrderResource($order);
     }
 
     public function ordersUser($id)
     {
         $userOrders = Order::where('user_id', $id)->get();
 
-        return OrderResource::collection($userOrders);
+        return OrdersResource::collection($userOrders);
     }
 
     /**
@@ -114,16 +142,40 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Order $order)
+    public function update(OrderStatusRequest $request, $id)
     {
-        //
+
+        $validated = $request->validated();
+
+        $order = Order::findOrFail($id);
+
+
+        $order->update([
+            "status" => $validated["status"]
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order created successfully',
+            'data' => $order, // Return the created order if needed
+        ], 201);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Order $order)
+    public function destroy($id)
     {
-        //
+        $order = Order::findOrFail($id);
+        DB::beginTransaction();
+
+        $order->delete();
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Admin soft deleted successfully.'
+        ], 200);
     }
 }

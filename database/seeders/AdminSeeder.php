@@ -22,7 +22,7 @@ class AdminSeeder extends Seeder
                 'email' => 'naser@atomi.com',
                 'password' => Hash::make('Naser?2023'),
                 'phone' => '0777777777',
-                'role_id' => '5251',
+                'role_id' => '1',
                 'status' => '1',
                 'created_at' => now(),
                 'updated_at' => now(),
