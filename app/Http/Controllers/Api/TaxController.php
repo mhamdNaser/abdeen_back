@@ -50,7 +50,7 @@ class TaxController extends Controller
         // Return a success response
         return response()->json([
             'success' => true,
-            'message' => 'Admin created successfully',
+            'message' => 'Tax created successfully',
             'data' => $tax
         ], 201);
     }
@@ -74,16 +74,36 @@ class TaxController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Tax $tax)
+    public function update(TaxRequest $request, $id)
     {
-        //
+        $validated = $request->validated();
+
+        $tax = Tax::findOrFail($id);
+
+
+        $tax->update([
+            "tax" => $validated["tax"]
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tax Update successfully',
+            'data' => $tax, // Return the created order if needed
+        ], 201);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Tax $tax)
+    public function destroy($id)
     {
-        //
+        $tax = Tax::findOrFail($id);
+
+        $tax->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tax delete successfully',
+        ], 201);
     }
 }

@@ -201,11 +201,15 @@ Route::prefix('admin')->group(function () {
     Route::controller(DeliveryController::class)->middleware('auth:sanctum')->group(function () {
         Route::get('all-deliveries', 'index')->name('all-deliveries');
         Route::post('store-delivery', 'store')->name('store-delivery');
+        Route::post('update-delivery/{id}', 'update')->name('update-delivery');
+        Route::get('delete-delivery/{id}', 'destroy')->name('delete-delivery');
     });
 
     Route::controller(TaxController::class)->middleware('auth:sanctum')->group(function () {
         Route::get('all-tax', 'index')->name('all-tax');
         Route::post('store-tax', 'store')->name('store-tax');
+        Route::post('update-tax/{id}', 'update')->name('update-tax');
+        Route::get('delete-tax/{id}', 'destroy')->name('delete-tax');
     });
 
     Route::controller(ProductTagsController::class)->middleware('auth:sanctum')->group(function () {
@@ -270,5 +274,10 @@ Route::prefix('admin')->group(function () {
         Route::post('show-translation/{slug}', 'show')->name('show-translation');
         Route::get('delete-language/{id}', 'destroy')->name('delete-language');
         Route::get('changestatus-language/{id}', 'changestatus')->name('changestatus-language');
+    });
+
+    Route::controller(SocialMediaController::class)->middleware('auth:sanctum')->group(function () {
+        Route::get('all-socialmedia', 'index')->name('all-socialmedia');
+        Route::post('update-socialmedia/{id}', 'update')->name('update-socialmedia');
     });
 });

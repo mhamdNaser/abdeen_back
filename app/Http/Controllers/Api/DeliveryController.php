@@ -53,7 +53,7 @@ class DeliveryController extends Controller
         // Return a success response
         return response()->json([
             'success' => true,
-            'message' => 'Admin created successfully',
+            'message' => 'delivery created successfully',
             'data' => $delivery
         ], 201);
     }
@@ -77,16 +77,39 @@ class DeliveryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Delivery $delivery)
+    public function update(DeliveryRequest $request, $id)
     {
-        //
+        $validated = $request->validated();
+
+        $delivery = Delivery::findOrFail($id);
+
+
+        $delivery->update([
+            "cost" => $validated["cost"] ?? $delivery->cost,
+            'country_id' => $validated['country_id'] ?? $delivery->country_id,
+            'state_id' => $validated['state_id'] ?? $delivery->state_id,
+            'city_id' => $validated['city_id'] ?? $delivery->city_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'delivery update successfully',
+            'data' => $delivery, // Return the created order if needed
+        ], 201);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Delivery $delivery)
+    public function destroy($id)
     {
-        //
+        $delivery = Delivery::findOrFail($id);
+
+        $delivery->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'delivery delete successfully',
+        ], 201);
     }
 }

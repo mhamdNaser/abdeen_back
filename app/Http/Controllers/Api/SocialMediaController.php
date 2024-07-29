@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SocialMediaRequest;
 use App\Models\SocialMedia;
 use Illuminate\Http\Request;
 
@@ -56,9 +57,23 @@ class SocialMediaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, SocialMedia $socialMedia)
+    public function update(SocialMediaRequest $request, $id)
     {
-        //
+        $validated = $request->validated();
+
+        $socialmedia = SocialMedia::findOrFail($id);
+
+
+        $socialmedia->update([
+            "title" => $validated["title"] ?? $socialmedia->title,
+            'link' => $validated['link'] ?? $socialmedia->link,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'delivery update successfully',
+            'data' => $socialmedia, // Return the created order if needed
+        ], 201);
     }
 
     /**
