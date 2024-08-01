@@ -220,7 +220,7 @@ Route::prefix('admin')->group(function () {
 
     Route::controller(ProductArchivesController::class)->middleware('auth:sanctum')->group(function () {
         Route::get('all-archives-products', 'index')->name('all-archives-products');
-        Route::post('update-product/{id}', 'update')->name('update-product');
+        Route::post('recover-product/{id}', 'update')->name('recover-product');
         Route::get('delete-archiveproduct/{id}', 'destroy')->name('delete-archiveproduct');
         Route::post('delete-products-array', 'DeleteArray')->name('delete-products-array');
     });

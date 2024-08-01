@@ -133,10 +133,14 @@ class UserArchivesController extends Controller
      */
     public function destroy($id)
     {
-        $admin = UserArchives::findOrFail($id);
+        $User = UserArchives::findOrFail($id);
         DB::beginTransaction();
 
-        $admin->delete();
+        if ($User->image && file_exists(public_path($User->image))) {
+            unlink(public_path($User->image));
+        }
+
+        $User->delete();
 
         Cache::forget("admins_cache");
 
@@ -144,7 +148,7 @@ class UserArchivesController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Admin soft deleted successfully.'
+            'message' => 'User deleted successfully.'
         ], 200);
     }
 
@@ -160,12 +164,16 @@ class UserArchivesController extends Controller
 
         try {
             // Fetch admins with IDs matching $idsToDelete
-            $adminsToTable = UserArchives::whereIn('id', $idsToDelete)->get();
+            $UsersToTable = UserArchives::whereIn('id', $idsToDelete)->get();
 
+            
             // Move admins to UserArchives and delete from Admin
-            foreach ($adminsToTable as $admin) {
+            foreach ($UsersToTable as $User) {
+                if ($User->image && file_exists(public_path($User->image))) {
+                    unlink(public_path($User->image));
+                }
 
-                $admin->delete();
+                $User->delete();
             }
 
             DB::commit();

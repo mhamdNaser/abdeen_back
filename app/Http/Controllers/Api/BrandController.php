@@ -63,14 +63,8 @@ class BrandController extends Controller
 
         if ($request->hasFile('image')) {
             $imageName = $validated['en_name'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
-
-            // Specify the destination directory within the public disk
             $destinationPath = public_path('upload/images/brands/');
-
-            // Move the uploaded file to the destination directory
             $validated['image']->move($destinationPath, $imageName);
-
-            // Construct the image path
             $imagePath = 'upload/images/brands/' . $imageName;
 
             $brand->update([

@@ -34,7 +34,7 @@ class StoreRequest extends FormRequest
             'country_id'    => 'required|integer',
             'state_id'      => 'required|integer',
             'city_id'       => 'required|integer',
-            'role_id'       => 'required|integer',
+            'role_id'       => 'nullable',
             'image'         => 'required|mimes:png,jpg', 
         ];
     }

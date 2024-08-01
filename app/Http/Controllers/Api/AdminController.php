@@ -29,18 +29,18 @@ class AdminController extends Controller
         $cacheKey = 'admins_cache';
 
         $admins = Cache::remember($cacheKey, $cacheDuration, function () {
-            return Admin::whereNot('role_id', 5251)
+            return Admin::whereNot('role_id', 1)
                 ->orWhereNull('role_id')
                 ->with('role')
                 ->get();
         });
 
-        $adminCountInDB = Admin::whereNot('role_id', 5251)
+        $adminCountInDB = Admin::whereNot('role_id', 1)
             ->orWhereNull('role_id')
             ->count();
 
         if ($admins->count() !== $adminCountInDB) {
-            $admins = Admin::whereNot('role_id', 5251)
+            $admins = Admin::whereNot('role_id', 1)
                 ->orWhereNull('role_id')
                 ->with('role')
                 ->get();
@@ -142,10 +142,10 @@ class AdminController extends Controller
             $imagePath = 'upload/images/admins/' . $imageName;
 
             // Create image record
-            $image = new Image();
-            $image->name = $imageName;
-            $image->path = $imagePath;
-            $admin->images()->save($image);
+            // $image = new Image();
+            // $image->name = $imageName;
+            // $image->path = $imagePath;
+            // $admin->images()->save($image);
 
             $admin->update([
                 'image' => $imagePath
@@ -180,7 +180,7 @@ class AdminController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
-            'role_id' => $validated['role_id'] ?? $admin->role_id,
+            'role_id' => isset($validated['role_id']) ? $validated['role_id'] : $admin->role_id,
         ];
 
         // Update name fields if 'name' is present
@@ -193,28 +193,16 @@ class AdminController extends Controller
 
         // Handle image upload if provided
         if (isset($validated['image'])) {
+            if ($admin->image && file_exists(public_path($admin->image))) {
+                unlink(public_path($admin->image));
+            }
             $imageName = $validated['username'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
-
-            // Specify the destination directory within the public disk
             $destinationPath = public_path('upload/images/admins/');
-
-            // Move the uploaded file to the destination directory
             $validated['image']->move($destinationPath, $imageName);
-
-            // Construct the image path
             $imagePath = 'upload/images/admins/' . $imageName;
-
-        
-            $image = new Image();
-            $image->name = $imageName;
-            $image->path = $imagePath;
-            $admin->images()->save($image);
-
-            // Update admin's image path
             $updateData['image'] = $imagePath;
         }
 
-        // Update admin with the prepared data
         $admin->update($updateData);
 
         Cache::forget("admins_cache");
@@ -385,20 +373,20 @@ class AdminController extends Controller
                 'country_id' => $admin->country_id,
                 'state_id' => $admin->state_id,
                 'city_id' => $admin->city_id,
-                'image' => null,
+                'image' => $admin->image,
                 'role_id' => $admin->role_id,
                 'status' => 0,
             ]);
 
-            $images = $admin->images;
+            // $images = $admin->image;
 
-            foreach ($images as $image) {
-                $imagePath = public_path($image->path);
-                if (file_exists($imagePath)) {
-                    unlink($imagePath);
-                }
-                $image->delete();
-            }
+            // foreach ($images as $image) {
+            //     $imagePath = public_path($image->path);
+            //     if (file_exists($imagePath)) {
+            //         unlink($imagePath);
+            //     }
+            //     $image->delete();
+            // }
 
             $admin->delete();
 

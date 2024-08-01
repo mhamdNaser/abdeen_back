@@ -23,7 +23,6 @@ class GlobalController extends Controller
         $brandCount = Brand::count();
         $totalCompletedOrderValue = Order::where('status', 'complete')->sum('total_price');
         $totalReturnedOrderValue = Order::where('status', 'return')->sum('total_price');
-
         $data = [
             'productCount' => $productCount,
             'userCount' => $userCount,

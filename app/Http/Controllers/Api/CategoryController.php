@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\product_details\CategoryRequest;
+use App\Http\Resources\Admin\category\CategoryMenuResource;
 use App\Http\Resources\Admin\category\CategoryResource;
 use App\Models\Category;
 use App\Models\Image;
@@ -44,10 +45,41 @@ class CategoryController extends Controller
 
     public function menuCategory()
     {
-        $categories = Category::whereNot("id", 1)->where("in_menu", 1)->where("status", 1)->get();
+        $categories = Category::where('id', '!=', 1)
+        ->where('in_menu', 1)
+        ->where('status', 1)
+        ->where('parent_id', 1)
+        ->with(['children' => function ($query) {
+            $query->where('in_menu', 1)
+            ->where('status', 1);
+        }])
+            ->get();
 
-        return CategoryResource::collection($categories);
+        $categories = $this->loadChildren($categories);
+
+        return CategoryMenuResource::collection($categories);
     }
+
+    private function loadChildren($categories)
+    {
+        foreach ($categories as $category) {
+            $category->children = $category->children()
+                ->where('in_menu', 1)
+                ->where('status', 1)
+                ->with(['children' => function ($query) {
+                    $query->where('in_menu', 1)
+                    ->where('status', 1);
+                }])
+                ->get();
+
+            if ($category->children->isNotEmpty()) {
+                $this->loadChildren($category->children);
+            }
+        }
+        return $categories;
+    }
+
+
 
     /**
      * Show the form for creating a new resource.
@@ -77,16 +109,9 @@ class CategoryController extends Controller
 
         if ($request->hasFile('image')) {
             $imageName = $validated['en_name'] . uniqid()  . '.' . $validated['image']->getClientOriginalExtension();
-
-            // Specify the destination directory within the public disk
             $destinationPath = public_path('upload/images/categories/');
-
-            // Move the uploaded file to the destination directory
             $validated['image']->move($destinationPath, $imageName);
-
-            // Construct the image path
             $imagePath = 'upload/images/categories/' . $imageName;
-
             $resource->update([
                 'image' => $imagePath
             ]);
@@ -128,17 +153,9 @@ class CategoryController extends Controller
             // Handle image upload if provided
             if ($request->hasFile('image')) {
                 $imageName = $validated['en_name'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
-
-                // Specify the destination directory within the public disk
                 $destinationPath = public_path('upload/images/categories/');
-
-                // Move the uploaded file to the destination directory
                 $validated['image']->move($destinationPath, $imageName);
-
-                // Construct the image path
                 $imagePath = 'upload/images/categories/' . $imageName;
-
-                // If the category already has an image, delete the old image
                 if ($category->image) {
                     $oldImagePath = public_path($category->image);
                     if (file_exists($oldImagePath)) {

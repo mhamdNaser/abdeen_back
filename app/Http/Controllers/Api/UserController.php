@@ -150,10 +150,10 @@ class UserController extends Controller
             $imagePath = 'upload/images/users/' . $imageName;
 
             // Create image record
-            $image = new Image();
-            $image->path = $imagePath; // Store the image path
-            $image->name = $imageName; // Store the image path
-            $User->images()->save($image);
+            // $image = new Image();
+            // $image->path = $imagePath; // Store the image path
+            // $image->name = $imageName; // Store the image path
+            // $User->images()->save($image);
 
             $User->update([
                 'image' => $imagePath
@@ -196,7 +196,7 @@ class UserController extends Controller
                     'country_id' => $User->country_id,
                     'state_id' => $User->state_id,
                     'city_id' => $User->city_id,
-                    'image' => null,
+                    'image' => $User->image,
                 ]);
 
                 $images = $User->images;
@@ -265,33 +265,13 @@ class UserController extends Controller
 
         // Handle image upload if provided
         if (isset($validated['image'])) {
-            $imageName = $validated['username'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
-
-            // Specify the destination directory within the public disk
-            $destinationPath = public_path('upload/images/users/');
-
-            // Move the uploaded file to the destination directory
-            $validated['image']->move($destinationPath, $imageName);
-
-            // Construct the image path
-            $imagePath = 'upload/images/users/' . $imageName;
-
-            // Check if user already has an image
-            $existingImage = $User->images()->first();
-            if ($existingImage) {
-                // Update existing image record
-                $existingImage->name = $imageName;
-                $existingImage->path = $imagePath;
-                $existingImage->save();
-            } else {
-                // Create a new image record
-                $image = new Image();
-                $image->name = $imageName;
-                $image->path = $imagePath;
-                $User->images()->save($image);
+            if ($User->image && file_exists(public_path($User->image))) {
+                unlink(public_path($User->image));
             }
-
-            // Update user's image path
+            $imageName = $validated['username'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
+            $destinationPath = public_path('upload/images/users/');
+            $validated['image']->move($destinationPath, $imageName);
+            $imagePath = 'upload/images/users/' . $imageName;
             $updateData['image'] = $imagePath;
         }
 
@@ -333,7 +313,7 @@ class UserController extends Controller
                 'country_id' => $User->country_id,
                 'state_id' => $User->state_id,
                 'city_id' => $User->city_id,
-                'image' => null,
+                'image' => $User->image,
             ]);
 
             // Get all images of the user

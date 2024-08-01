@@ -139,6 +139,10 @@ class AdminArchiveController extends Controller
         $admin = AdminArchive::findOrFail($id);
         DB::beginTransaction();
 
+        if ($admin->image && file_exists(public_path($admin->image))) {
+            unlink(public_path( $admin->image));
+        }
+
         $admin->delete();
 
         Cache::forget("admins_cache");
@@ -167,6 +171,10 @@ class AdminArchiveController extends Controller
 
             // Move admins to AdminArchive and delete from Admin
             foreach ($adminsToTable as $admin) {
+
+                if ($admin->image && file_exists(public_path($admin->image))) {
+                    unlink(public_path($admin->image));
+                }
 
                 $admin->delete();
             }

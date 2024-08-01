@@ -115,24 +115,10 @@ class ProductController extends Controller
 
 
         if ($validated['image']) {
-            // Generate unique image name
             $imageName = uniqid() . '_' . $validated['image']->getClientOriginalName();
-
-            // Specify the destination directory within the public disk
             $destinationPath = public_path('upload/images/products/');
-
-            // Move the uploaded file to the destination directory
             $validated['image']->move($destinationPath, $imageName);
-
-            // Return the image path
             $imagePath = 'upload/images/products/' . $imageName;
-
-            // Create image record
-            $image = new Image();
-            $image->path = $imagePath;
-            $image->name = $imageName;
-            $product->images()->save($image);
-
             $product->update([
                 'image' => $imagePath
             ]);
@@ -223,33 +209,13 @@ class ProductController extends Controller
         ];
 
         if (isset($validated['image'])) {
-            $imageName = $validated['en_name'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
-
-            // Specify the destination directory within the public disk
-            $destinationPath = public_path('upload/images/users/');
-
-            // Move the uploaded file to the destination directory
-            $validated['image']->move($destinationPath, $imageName);
-
-            // Construct the image path
-            $imagePath = 'upload/images/users/' . $imageName;
-
-            // Check if user already has an image
-            $existingImage = $product->images()->first();
-            if ($existingImage) {
-                // Update existing image record
-                $existingImage->name = $imageName;
-                $existingImage->path = $imagePath;
-                $existingImage->save();
-            } else {
-                // Create a new image record
-                $image = new Image();
-                $image->name = $imageName;
-                $image->path = $imagePath;
-                $product->images()->save($image);
+            if ($product->image && file_exists(public_path($product->image))) {
+                unlink(public_path($product->image));
             }
-
-            // Update user's image path
+            $imageName = $validated['en_name'] . uniqid() . '.' . $validated['image']->getClientOriginalExtension();
+            $destinationPath = public_path('upload/images/products/');
+            $validated['image']->move($destinationPath, $imageName);
+            $imagePath = 'upload/images/products/' . $imageName;
             $updateData['image'] = $imagePath;
         }
 
@@ -300,24 +266,26 @@ class ProductController extends Controller
         DB::beginTransaction();
 
         try {
-            $UsersToDelete = User::whereIn('id', $idsToDelete)->get();
+            $productToDelete = Product::whereIn('id', $idsToDelete)->get();
 
-            foreach ($UsersToDelete as $User) {
-                UserArchives::create([
-                    'username' => $User->username,
-                    'email' => $User->email,
-                    'phone' => $User->phone,
-                    'password' => $User->password,
-                    'first_name' => $User->first_name,
-                    'medium_name' => $User->medium_name,
-                    'last_name' => $User->last_name,
-                    'country_id' => $User->country_id,
-                    'state_id' => $User->state_id,
-                    'city_id' => $User->city_id,
-                    'image' => null,
+            foreach ($productToDelete as $product) {
+                ProductArchives::create([
+                    'sku' => $product->sku,
+                    'en_name' => $product->en_name,
+                    'ar_name' => $product->ar_name,
+                    'image' => $product->image,
+                    'en_description' => $product->en_description,
+                    'ar_description' => $product->ar_description,
+                    'cost_Price' => $product->cost_Price,
+                    'public_price' => $product->public_price,
+                    'category_id' => $product->category_id,
+                    'brand_id' => $product->brand_id,
+                    'quantity' => 0,
+                    'status' => 0,
+                    'discount' => 0,
                 ]);
 
-                $images = $User->images;
+                $images = $product->images;
 
                 foreach ($images as $image) {
                     $imagePath = public_path($image->path);
@@ -327,8 +295,10 @@ class ProductController extends Controller
                     $image->delete();
                 }
 
-                $User->delete();
+                $product->delete();
             }
+
+            Cache::forget("products_cache");
 
             DB::commit();
 

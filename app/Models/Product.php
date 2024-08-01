@@ -40,13 +40,13 @@ class Product extends Model
             $imageName = uniqid() . '_' . $image->getClientOriginalName();
 
             // Specify the destination directory within the public disk
-            $destinationPath = public_path('upload/images/admin/');
+            $destinationPath = public_path('upload/images/products/');
 
             // Move the uploaded file to the destination directory
             $image->move($destinationPath, $imageName);
 
             // Return the image path
-            $path = 'upload/images/admin/' . $imageName;
+            $path = 'upload/images/products/' . $imageName;
 
             // $destinationPath = public_path('upload/images/admin/');
             
