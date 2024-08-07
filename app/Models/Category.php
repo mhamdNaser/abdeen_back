@@ -22,9 +22,13 @@ class Category extends Model
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    // Relationship to get the child categories
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    public function brands()
+    {
+        return $this->belongsToMany(Brand::class, 'brand_category');
     }
 }

@@ -46,13 +46,13 @@ class CategoryController extends Controller
     public function menuCategory()
     {
         $categories = Category::where('id', '!=', 1)
-        ->where('in_menu', 1)
-        ->where('status', 1)
-        ->where('parent_id', 1)
-        ->with(['children' => function ($query) {
-            $query->where('in_menu', 1)
-            ->where('status', 1);
-        }])
+            ->where('in_menu', 1)
+            ->where('status', 1)
+            ->with([
+                'brands' => function ($query) {
+                    $query->where('status', 1); // يمكنك تخصيص الشروط حسب الحاجة
+                }
+            ])
             ->get();
 
         $categories = $this->loadChildren($categories);
@@ -68,7 +68,7 @@ class CategoryController extends Controller
                 ->where('status', 1)
                 ->with(['children' => function ($query) {
                     $query->where('in_menu', 1)
-                    ->where('status', 1);
+                        ->where('status', 1);
                 }])
                 ->get();
 
@@ -162,10 +162,9 @@ class CategoryController extends Controller
                         unlink($oldImagePath);
                     }
                     $updateData['image'] = $imagePath;
-                }else{
+                } else {
                     $updateData['image'] = $imagePath;
                 }
-
             }
 
             $category->update($updateData);
@@ -208,7 +207,7 @@ class CategoryController extends Controller
             'category' => new CategoryResource($category),
         ], 200);
     }
-    
+
     public function showbyname($name)
     {
         $category = Category::where("en_name", $name)->first();
@@ -348,6 +347,4 @@ class CategoryController extends Controller
             ], 500);
         }
     }
-
-
 }

@@ -33,9 +33,19 @@ class SocialMediaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(SocialMediaRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        $socialmedia = SocialMedia::create([
+            'title' => $validated['title'],
+            'link' => $validated['link'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Social media created successfully',
+        ], 201);
     }
 
     /**

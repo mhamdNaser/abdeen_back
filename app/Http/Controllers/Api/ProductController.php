@@ -40,10 +40,36 @@ class ProductController extends Controller
         return ProductResource::collection($products);
     }
 
+    public function search(Request $request)
+    {
+        $query = Product::query();
+
+        if ($request->has('searchTerm')) {
+            $searchTerm = $request->input('searchTerm');
+            $query->where('en_name', 'LIKE', "%{$searchTerm}%")
+            ->orWhere('ar_name', 'LIKE', "%{$searchTerm}%")
+            ->orWhere('sku', 'LIKE', "%{$searchTerm}%")
+            ->orWhere('en_description', 'LIKE', "%{$searchTerm}%")
+            ->orWhere('ar_description', 'LIKE', "%{$searchTerm}%")
+            ->orWhereHas('brand', function ($q) use ($searchTerm) {
+                $q->where('en_name', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('ar_name', 'LIKE', "%{$searchTerm}%");
+            })
+                ->orWhereHas('category', function ($q) use ($searchTerm) {
+                    $q->where('en_name', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('ar_name', 'LIKE', "%{$searchTerm}%");
+                });
+        }
+
+        $products = $query->with(['brand', 'category'])->get(['id', 'en_name', 'ar_name', 'image']);
+
+        return response()->json($products);
+    }
+
     public function allproducts()
     {
         $cacheDuration = 60; // Cache duration in minutes
-        $cacheKey = 'all_products_cache';
+        $cacheKey = 'products_cache';
 
         $products = Cache::remember($cacheKey, $cacheDuration, function () {
             return Product::get();

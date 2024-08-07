@@ -10,10 +10,13 @@ use App\Http\Resources\Site\ViewOrderResource;
 use App\Models\Order;
 use App\Models\OrderAddress;
 use App\Models\OrderProduct;
+use App\Models\Payment;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+
 
 class OrderController extends Controller
 {
@@ -33,21 +36,13 @@ class OrderController extends Controller
         return OrderAdminResource::collection($userOrders);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-
     public function store(Request $request)
     {
         // Validate the incoming request data
         $request->validate([
             'products.*.id' => 'required|numeric|exists:products,id',
             'products.*.quantity' => 'required|numeric',
+            // "paymentmethod" => "required",
             'price' => 'required|numeric',
             'tax' => 'required|numeric',
             'delivery' => 'required|numeric',
@@ -55,6 +50,7 @@ class OrderController extends Controller
             'totaldiscount' => 'required|numeric',
             'address' => 'nullable'
         ]);
+
 
         // Create the order record
         $order = Order::create([
@@ -93,6 +89,10 @@ class OrderController extends Controller
             // For example, calculate the final price after discount
             $finalPrice = $price - ($price * ($discount / 100));
 
+            if ($product->quantity < $productData['quantity']) {
+                return response()->json(['error' => 'Quantity not sufficient for product ID ' . $productData['id']], 400);
+            }
+
             // Create OrderProduct record
             $orderProduct = OrderProduct::create([
                 'order_id' => $order->id,
@@ -102,21 +102,23 @@ class OrderController extends Controller
                 'discount' => $discount, // Or you may store the discount separately if needed
                 'tag_id' => null,
             ]);
+
+            $product->quantity -= $productData['quantity'];
+            $product->save();
         }
 
+        Cache::forget("products_cache");
+
         $order->save();
+        // $paypalLink = $this->createPayPalOrder($request->totalprice);
 
         return response()->json([
             'success' => true,
             'message' => 'Order created successfully',
-            'data' => $order, // Return the created order if needed
+            'orderId' => $order->id, // Return the created order if needed
         ], 201);
     }
 
-
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $order = Order::with('orderProducts')->findOrFail($id);
@@ -131,23 +133,17 @@ class OrderController extends Controller
         return OrdersResource::collection($userOrders);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Order $order)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(OrderStatusRequest $request, $id)
     {
 
         $validated = $request->validated();
 
         $order = Order::findOrFail($id);
+
+        if (in_array($validated["status"], ['reject', 'return'])) {
+            // Delete payments related to this order
+            Payment::where('order_id', $order->id)->delete();
+        }
 
 
         $order->update([
@@ -161,9 +157,6 @@ class OrderController extends Controller
         ], 201);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         $order = Order::findOrFail($id);

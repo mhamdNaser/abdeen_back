@@ -34,7 +34,7 @@ class ProductRequest extends FormRequest
             'quantity'         => 'nullable|integer',
             'category_id'      => 'nullable|integer',
             'brand_id'         => 'nullable|integer',
-            'image'            => 'required|mimes:png,jpg',
+            'image'            => 'required',
         ];
     }
     public function failedValidation(Validator $validator)

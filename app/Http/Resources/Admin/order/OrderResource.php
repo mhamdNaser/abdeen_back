@@ -42,17 +42,22 @@ class OrderResource extends JsonResource
                     'created_at' => Carbon::parse($this->created_at)->format('d-m-Y'),
                 ];
             }),
-            "address" => $this->orderAddress->map(function ($orderAddres) {
+            "address" => isset($this->orderAddress) && $this->orderAddress->isNotEmpty() ? $this->orderAddress->map(function ($orderAddres) {
                 return [
-                    'id' => $orderAddres->id,
-                    'country' => $orderAddres->country->name,
-                    'state' => $orderAddres->state->name,
-                    'city' => $orderAddres->city->name,
-                    'address_1' => $orderAddres->address_1,
-                    'address_2' => $orderAddres->address_2,
-                    'address_3' => $orderAddres->address_3,
+                    'id' => isset($orderAddres->id) ? $orderAddres->id : null,
+                    'country' => isset($orderAddres->country) ? $orderAddres->country->name : null,
+                    'state' => isset($orderAddres->state) ? $orderAddres->state->name : null,
+                    'city' => isset($orderAddres->city) ? $orderAddres->city->name : null,
+                    'address_1' => isset($orderAddres->address_1) ? $orderAddres->address_1 : null,
+                    'address_2' => isset($orderAddres->address_2) ? $orderAddres->address_2 : null,
+                    'address_3' => isset($orderAddres->address_3) ? $orderAddres->address_3 : null,
                 ];
-            }),
+            }) : null,
+            'payment' => $this->payment ? [
+                'payment_id' => $this->payment->payment_id,
+                'payment_method' => $this->payment->payment_method,
+                'transaction_id' => $this->payment->transaction_id,
+            ] : null,
         ];
     }
 }

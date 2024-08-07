@@ -5,7 +5,6 @@ use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\CountryController;
-use App\Http\Controllers\Api\LocaleController;
 use App\Http\Controllers\Api\StateController;
 use App\Http\Controllers\Api\UserArchivesController;
 use App\Http\Controllers\Api\UserController;
@@ -15,6 +14,7 @@ use App\Http\Controllers\Api\AttributeController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\PageContentController;
 use App\Http\Controllers\Api\AttributeTagsController;
+use App\Http\Controllers\Api\BrandCategoryController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\Api\ProductController;
@@ -23,69 +23,17 @@ use App\Http\Controllers\Api\ProductTagsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SocialMediaController;
 use App\Http\Controllers\Api\TaxController;
-use App\Http\Controllers\Api\OrderProductController;
 use App\Http\Controllers\Api\GlobalController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PaymentMethodController;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-
-
-// Route::get('all-admins', [AdminController::class, 'index']);
-
-
-Route::get('/locale/{lang}', [LocaleController::class, 'setlocale']);
-Route::prefix('site')->group(function () {
-    Route::get('menu-categories', [CategoryController::class,  "menuCategory"])->name('menu-categories');
-    Route::get('menu-Brand', [BrandController::class,  "menuBrand"])->name('menu-Brand');
-    Route::get('active-languages', [LanguageController::class, 'active'])->name('active-languages');
-    Route::get('all-countries', [CountryController::class, 'index'])->name('all-countries');
-    Route::get('all-states', [StateController::class, 'index'])->name('all-states');
-    Route::get('all-cities', [CityController::class, 'index'])->name('all-cities');
-    Route::post('login', [UserController::class, 'login'])->name('login');
-    Route::post('singup', [UserController::class, 'store'])->name('singup');
-    Route::get('socialmedia', [SocialMediaController::class, 'index'])->name('socialmedia');
-    Route::get('show-oreders/{id}', [OrderController::class, 'ordersUser'])->name('show-oreders');
-    Route::get('show-brand/{name}', [BrandController::class, 'showbyname'])->name('show-brand');
-    Route::get('show-category/{name}', [CategoryController::class, 'showbyname'])->name('show-category');
-    Route::get('get-productTag/{id}', [ProductTagsController::class, 'getTagByProductId'])->name('get-productTag');
-
-
-    Route::controller(DeliveryController::class)->group(function () {
-        Route::get('all-deliveries', 'index')->name('all-deliveries');
-    });
-
-    Route::controller(TaxController::class)->group(function () {
-        Route::get('tax', 'index')->name('tax');
-    });
-
-
-    Route::controller(ProductController::class)->group(function () {
-        Route::get('topbuy-products', 'topSellingProducts')->name('topbuy-products');
-        Route::get('category-products/{id}', 'categoryProducts')->name('category-products');
-        Route::get('all-products',  'allproducts')->name('all-products');
-        Route::get('topDiscounted-products', 'topDiscountedProducts')->name('topDiscounted-products');
-        Route::get('show-product/{id}',  'cartProduct')->name('show-product');
-        Route::get('show-product-images/{productId}', 'showImages')->name('show-product-images');
-    });
-
-    Route::controller(OrderController::class)->middleware('auth:sanctum')->group(function () {
-        Route::post('store-order', 'store')->name('store-order');
-        Route::get('show-order/{id}', 'show')->name('show-order');
-        Route::get('delete-oreder/{id}', 'destroy')->name('delete-oreder');
-    });
-
-    Route::controller(OrderProductController::class)->middleware('auth:sanctum')->group(function () {
-        Route::get('delete-orderProduct/{id}', 'destroy')->name('delete-orderProduct');
-    });
-});
 
 
 Route::prefix('admin')->group(function () {
     Route::post('login', [AdminController::class, 'login'])->name('admin.login');
     Route::get('statistics', [GlobalController::class, 'getStatistics']);
+
+    Route::post('/store-brand-category', [BrandCategoryController::class, 'store'])->name('store-brand-category');
 
     // Admins route >>> for deleted , add and update admins
     Route::controller(AdminController::class)->middleware('auth:sanctum')->group(function () {
@@ -279,5 +227,19 @@ Route::prefix('admin')->group(function () {
     Route::controller(SocialMediaController::class)->middleware('auth:sanctum')->group(function () {
         Route::get('all-socialmedia', 'index')->name('all-socialmedia');
         Route::post('update-socialmedia/{id}', 'update')->name('update-socialmedia');
+        Route::post('store-socialmedia', 'store')->name('store-socialmedia');
+    });
+
+    Route::controller(PaymentMethodController::class)->middleware('auth:sanctum')->group(function () {
+        Route::get('/paymentMethod', 'index')->name('admin.paymentMethod.index');
+        Route::post('/paymentMethod/update/{id}', 'update')->name('admin.paymentMethod.update');
+        Route::get('changestatus-paymentMethod/{id}', 'changestatus')->name('changestatus-paymentMethod');
+        Route::get('/paymentMethod/paypal', 'getPaypal')->name('admin.paymentMethod.getPaypal');
+        Route::post('/paymentMethod/create-payment', 'store')->name('admin.paymentMethod.createPayment');
+        Route::get('/paymentMethod/delete/{id}', 'destroy')->name('admin.paymentMethod.delete');
+    });
+
+    Route::controller(PaymentController::class)->middleware('auth:sanctum')->group(function () {
+        Route::get('all-payments', 'getAllPayments')->name('all-payments');
     });
 });
