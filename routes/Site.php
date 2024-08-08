@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\LocaleController;
 use App\Http\Controllers\Api\OrderProductController;
+use App\Http\Controllers\Api\PageContentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -50,6 +51,10 @@ Route::prefix('site')->group(function () {
         Route::get('all-deliveries', 'index')->name('all-deliveries');
     });
 
+    Route::controller(PageContentController::class)->group(function () {
+        Route::post('pageContent/showbytitle', 'showByTitle')->name('pageContent.showbytitle');
+    });
+
     Route::controller(TaxController::class)->group(function () {
         Route::get('tax', 'index')->name('tax');
     });
@@ -57,6 +62,7 @@ Route::prefix('site')->group(function () {
     Route::controller(ProductController::class)->group(function () {
         Route::get('topbuy-products', 'topSellingProducts')->name('topbuy-products');
         Route::get('category-products/{id}', 'categoryProducts')->name('category-products');
+        Route::get('brand-products/{id}', 'brandProducts')->name('brand-products');
         Route::get('all-products', 'allproducts')->name('all-products');
         Route::get('topDiscounted-products', 'topDiscountedProducts')->name('topDiscounted-products');
         Route::get('show-product/{id}', 'cartProduct')->name('show-product');

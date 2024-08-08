@@ -93,11 +93,19 @@ class ProductController extends Controller
         // Return the products as a resource collection
         return ProductResource::collection($categoryProducts);
     }
+    public function brandProducts($id)
+    {
+        // Fetch the top 6 products with the highest buy_num
+        $categoryProducts = Product::where('brand_id', $id)->get();
+
+        // Return the products as a resource collection
+        return ProductResource::collection($categoryProducts);
+    }
 
     public function topSellingProducts()
     {
         // Fetch the top 6 products with the highest buy_num
-        $topSellingProducts = Product::orderBy('buy_num', 'desc')->take(4)->get();
+        $topSellingProducts = Product::orderBy('buy_num', 'desc')->take(10)->get();
 
         // Return the products as a resource collection
         return ProductResource::collection($topSellingProducts);
@@ -106,7 +114,7 @@ class ProductController extends Controller
     public function topDiscountedProducts()
     {
         // Fetch the top 6 products with the highest discount
-        $topDiscountedProducts = Product::orderBy('discount', 'desc')->take(4)->get();
+        $topDiscountedProducts = Product::orderBy('discount', 'desc')->take(10)->get();
 
         // Return the products as a resource collection
         return ProductResource::collection($topDiscountedProducts);

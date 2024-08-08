@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\PageContentController;
 use App\Http\Controllers\Api\AttributeTagsController;
 use App\Http\Controllers\Api\BrandCategoryController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\Api\ProductController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SocialMediaController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\GlobalController;
+use App\Http\Controllers\Api\LandPageImageController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +37,15 @@ Route::prefix('admin')->group(function () {
 
     Route::post('/store-brand-category', [BrandCategoryController::class, 'store'])->name('store-brand-category');
 
+    Route::controller(LandPageImageController::class)->middleware('auth:sanctum')->group(function () {
+        Route::post('/images/store',  'store')->name("images-store");
+        Route::get('images/info', 'getImageSite')->name('images-info');
+    });
+
+    Route::controller(CompanyController::class)->middleware('auth:sanctum')->group(function () {
+        Route::post('/company/store', 'store')->name('company-store');
+        Route::get('/company/info', 'getCompanyInfo')->name('company-info');
+    });
     // Admins route >>> for deleted , add and update admins
     Route::controller(AdminController::class)->middleware('auth:sanctum')->group(function () {
         Route::get('all-admins', 'index')->name('all-admins');
