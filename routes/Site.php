@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\StateController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\DeliveryController;
+use App\Http\Controllers\Api\LandPageImageController;
 use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductTagsController;
@@ -32,6 +34,7 @@ Route::get('/locale/{lang}', [LocaleController::class, 'setlocale']);
 
 Route::prefix('site')->group(function () {
     Route::get('menu-categories', [CategoryController::class, "menuCategory"])->name('menu-categories');
+    Route::get('filter-categories', [CategoryController::class, "fiterCategory"])->name('filter-categories');
     Route::get('menu-Brand', [BrandController::class, "menuBrand"])->name('menu-Brand');
     Route::get('active-languages', [LanguageController::class, 'active'])->name('active-languages');
     Route::get('all-countries', [CountryController::class, 'index'])->name('all-countries');
@@ -45,6 +48,8 @@ Route::prefix('site')->group(function () {
     Route::get('show-category/{name}', [CategoryController::class, 'showbyname'])->name('show-category');
     Route::get('get-productTag/{id}', [ProductTagsController::class, 'getTagByProductId'])->name('get-productTag');
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
+    Route::get('company/info', [CompanyController::class, 'getCompanyInfo'])->name('company-info');
+    Route::get('images/info', [LandPageImageController::class, 'getImageSite'])->name('images-info');
 
 
     Route::controller(DeliveryController::class)->group(function () {
@@ -67,6 +72,7 @@ Route::prefix('site')->group(function () {
         Route::get('topDiscounted-products', 'topDiscountedProducts')->name('topDiscounted-products');
         Route::get('show-product/{id}', 'cartProduct')->name('show-product');
         Route::get('show-product-images/{productId}', 'showImages')->name('show-product-images');
+        Route::get('add-view-product/{productId}', 'addview')->name('add-view-product');
     });
 
     Route::controller(PaymentMethodController::class)->group(function () {

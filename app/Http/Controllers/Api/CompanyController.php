@@ -32,6 +32,11 @@ class CompanyController extends Controller
         }
 
         if ($request->hasFile('logo')) {
+
+            if ($companyInfo->logo && file_exists(public_path($companyInfo->logo))) {
+                unlink(public_path($companyInfo->logo));
+            }
+
             $image = $request->file('logo');
             $imageName = time() . '_' . $image->getClientOriginalName();
             $image->move(public_path('images/company-data'), $imageName);

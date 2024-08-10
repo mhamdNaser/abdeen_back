@@ -12,6 +12,7 @@ use App\Models\OrderAddress;
 use App\Models\OrderProduct;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -42,15 +43,19 @@ class OrderController extends Controller
         $request->validate([
             'products.*.id' => 'required|numeric|exists:products,id',
             'products.*.quantity' => 'required|numeric',
-            // "paymentmethod" => "required",
             'price' => 'required|numeric',
             'tax' => 'required|numeric',
             'delivery' => 'required|numeric',
             'totalprice' => 'required|numeric',
             'totaldiscount' => 'required|numeric',
-            'address' => 'nullable'
+            'address' => 'nullable|array', // Ensure address is an array if provided
+            'address.country_id' => 'nullable|exists:countries,id',
+            'address.state_id' => 'nullable|exists:states,id',
+            'address.city_id' => 'nullable|exists:cities,id',
+            'address.address_1' => 'nullable|string|max:255',
+            'address.address_2' => 'nullable|string|max:255',
+            'address.address_3' => 'nullable|string|max:255',
         ]);
-
 
         // Create the order record
         $order = Order::create([
@@ -63,30 +68,39 @@ class OrderController extends Controller
             'total_discount' => $request->totaldiscount,
         ]);
 
+        $user = Auth::user();
 
-        if ($request->address) {
+        // Check if the address is provided and valid, otherwise use the authenticated user's address
+        if ($request->has('address') && !empty($request->address)) {
+            $addressData = $request->address;
             $orderAddress = OrderAddress::create([
-                'country_id' => $request->address["country_id"],
-                'state_id' => $request->address["state_id"],
-                'city_id' => $request->address["city_id"],
-                'address_1' => $request->address["address_1"],
-                'address_2' => $request->address["address_2"],
-                'address_3' => $request->address["address_3"],
+                'country_id' => $addressData['country_id'] ?? $user->country_id,
+                'state_id' => $addressData['state_id'] ?? $user->state_id,
+                'city_id' => $addressData['city_id'] ?? $user->city_id,
+                'address_1' => $addressData['address_1'] ?? $user->address_1,
+                'address_2' => $addressData['address_2'] ?? $user->address_2,
+                'address_3' => $addressData['address_3'] ?? $user->address_3,
+                'order_id' => $order->id,
+            ]);
+        } else {
+            $orderAddress = OrderAddress::create([
+                'country_id' => $user->country_id,
+                'state_id' => $user->state_id,
+                'city_id' => $user->city_id,
+                'address_1' => $user->address_1,
+                'address_2' => $user->address_2,
+                'address_3' => $user->address_3,
                 'order_id' => $order->id,
             ]);
         }
 
-
+        // Process each product in the order
         foreach ($request->products as $productData) {
-            // Fetch product details from database based on product_id
-            $product = Product::findOrFail($productData['id']); // Adjust 'Product' to your actual model name
+            $product = Product::findOrFail($productData['id']);
 
-            // Calculate price after applying discount
             $price = $product->public_price;
             $discount = $product->discount;
 
-            // You may want to adjust the logic for applying discounts if needed
-            // For example, calculate the final price after discount
             $finalPrice = $price - ($price * ($discount / 100));
 
             if ($product->quantity < $productData['quantity']) {
@@ -103,15 +117,16 @@ class OrderController extends Controller
                 'tag_id' => null,
             ]);
 
+            // Update product quantity and buy number
             $product->quantity -= $productData['quantity'];
+            $product->buy_num += 1;
             $product->save();
         }
 
+        // Clear the products cache
         Cache::forget("products_cache");
 
-        $order->save();
-        // $paypalLink = $this->createPayPalOrder($request->totalprice);
-
+        // Return a success response with the created order ID
         return response()->json([
             'success' => true,
             'message' => 'Order created successfully',

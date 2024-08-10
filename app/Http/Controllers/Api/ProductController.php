@@ -61,9 +61,9 @@ class ProductController extends Controller
                 });
         }
 
-        $products = $query->with(['brand', 'category'])->get(['id', 'en_name', 'ar_name', 'image']);
+        $products = $query->with(['brand', 'category'])->get();
 
-        return response()->json($products);
+        return ProductResourceSite::collection($products);
     }
 
     public function allproducts()
@@ -109,6 +109,19 @@ class ProductController extends Controller
 
         // Return the products as a resource collection
         return ProductResource::collection($topSellingProducts);
+    }
+
+    public function addview($productId){
+        $product = Product::find($productId);
+
+        $product->view_num = $product->view_num + 1 ;
+
+        $product->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'product created successfully',
+        ], 201);
     }
 
     public function topDiscountedProducts()

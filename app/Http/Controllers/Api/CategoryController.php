@@ -60,6 +60,22 @@ class CategoryController extends Controller
         return CategoryMenuResource::collection($categories);
     }
 
+    public function fiterCategory(){
+        $categories = Category::where('id', '!=', 1)
+        ->where('in_menu', 1)
+        ->where('status', 1)
+        ->where('parent_id', 1)
+        ->with(['children' => function ($query) {
+            $query->where('in_menu', 1)
+            ->where('status', 1);
+        }])
+        ->get();
+
+        $categories = $this->loadChildren($categories);
+
+        return CategoryMenuResource::collection($categories);
+    }
+
     private function loadChildren($categories)
     {
         foreach ($categories as $category) {

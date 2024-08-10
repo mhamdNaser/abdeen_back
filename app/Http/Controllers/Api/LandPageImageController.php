@@ -25,6 +25,11 @@ class LandPageImageController extends Controller
 
         // Handling primary images
         if ($request->hasFile('primary_image_1')) {
+            // Delete the old image if it exists
+            if ($image->primary_image_1 && file_exists(public_path($image->primary_image_1))) {
+                unlink(public_path($image->primary_image_1));
+            }
+
             $file = $request->file('primary_image_1');
             $fileName = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('images/landPage'), $fileName);
@@ -33,6 +38,11 @@ class LandPageImageController extends Controller
 
         // Handling secondary images
         if ($request->hasFile('secondary_image_1')) {
+            // Delete the old image if it exists
+            if ($image->secondary_image_1 && file_exists(public_path($image->secondary_image_1))) {
+                unlink(public_path($image->secondary_image_1));
+            }
+
             $file = $request->file('secondary_image_1');
             $fileName = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('images/landPage'), $fileName);
@@ -40,6 +50,11 @@ class LandPageImageController extends Controller
         }
 
         if ($request->hasFile('secondary_image_2')) {
+            // Delete the old image if it exists
+            if ($image->secondary_image_2 && file_exists(public_path($image->secondary_image_2))) {
+                unlink(public_path($image->secondary_image_2));
+            }
+
             $file = $request->file('secondary_image_2');
             $fileName = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('images/landPage'), $fileName);
@@ -50,6 +65,7 @@ class LandPageImageController extends Controller
 
         return response()->json(['message' => 'Images saved successfully!']);
     }
+
 
     public function getImageSite(){
         $image = LandPageImage::first();
